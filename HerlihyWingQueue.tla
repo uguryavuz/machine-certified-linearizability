@@ -2,8 +2,8 @@
 EXTENDS Integers, Sequences, FiniteSets, FiniteSetTheorems, Functions, FunctionTheorems, TLC, TLAPS
 
 CONSTANTS ACK, BOT
-VARIABLES pc, L, Q, i, j, l, x, v, T
-vars == <<pc, L, Q, i, j, l, x, v, T>>
+VARIABLES pc, L, Q, i, j, l, x, v, M
+vars == <<pc, L, Q, i, j, l, x, v, M>>
 
 ASSUME AckBotDef == /\ ACK \notin Nat
                     /\ BOT \notin Nat
@@ -84,7 +84,7 @@ LEMMA MaxElement == \A S : (S \in SUBSET Int /\ S # {} /\ IsFiniteSet(S)) => \E 
   <1> QED
     BY <1>3, Zenon DEF P
     
-\* Needed to prove Inv => (T # {})
+\* Needed to prove Inv => (M # {})
 LEMMA WellOrderingPrinciple == \A S : (S \in SUBSET Int /\ IsFiniteSet(S)) => \E f \in Bijection(1..Cardinality(S), S) : (\A m, n \in 1..Cardinality(S) : m < n => f[m] < f[n])
   <1> SUFFICES ASSUME NEW S \in SUBSET Int, IsFiniteSet(S)
                PROVE  \E f \in Bijection(1..Cardinality(S), S) : (\A m, n \in 1..Cardinality(S) : m < n => f[m] < f[n])
@@ -433,7 +433,7 @@ UnlinearizedEnqs(t) == {q \in ProcSet : pc[q] \in {2, 3} /\ t.res[q] = BOT}
 
 \* Set of linearization tuples after process p returns r. 
 \* (Filter non-r responses, and reset the response field).
-Filter(p, r) == {u \in TupleDomain : \E t \in T : /\ t.res[p] = r
+Filter(p, r) == {u \in TupleDomain : \E t \in M : /\ t.res[p] = r
                                                   /\ u.state = t.state
                                                   /\ u.res[p] = BOT
                                                   /\ \A q \in ProcSet : q /= p =>  u.res[q] = t.res[q]}
@@ -460,7 +460,7 @@ TypeOK == /\ pc \in [ProcSet -> 0..7]
           /\ l  \in [ProcSet -> PosInts]
           /\ x  \in [ProcSet -> PosInts \union {BOT}]
           /\ v  \in [ProcSet -> PosInts]
-          /\ T  \in SUBSET {t \in TupleDomain : tTypeOK(t)}
+          /\ M  \in SUBSET {t \in TupleDomain : tTypeOK(t)}
           
 Init   == /\ pc = [p \in ProcSet |-> 0]
           /\ L  = 1
@@ -470,23 +470,23 @@ Init   == /\ pc = [p \in ProcSet |-> 0]
           /\ l  \in [ProcSet -> PosInts]
           /\ x  \in [ProcSet -> PosInts \union {BOT}]
           /\ v  \in [ProcSet -> PosInts]
-          /\ T  = {[state |-> <<>>,
+          /\ M  = {[state |-> <<>>,
                     res   |-> [p \in ProcSet |-> BOT]]}
                     
 L00(p) == /\ pc[p] = 0
           /\ \E new_ln \in {1, 4} : /\ pc' = [pc EXCEPT ![p] = new_ln]
                                     /\ CASE new_ln = 1 -> \E new_v \in PosInts : v' = [v EXCEPT ![p] = new_v]
                                          [] new_ln = 4 -> v' = v
-          /\ UNCHANGED <<L, Q, i, j, l, x, T>>
+          /\ UNCHANGED <<L, Q, i, j, l, x, M>>
           
 L01(p) == /\ pc[p] = 1
           /\ pc' = [pc EXCEPT ![p] = 2]
           /\ i'  = [i  EXCEPT ![p] = L]
           /\ L'  = L + 1
           /\ UNCHANGED <<Q, j, l, x, v>>
-          /\ T'  = {u \in TupleDomain : 
+          /\ M'  = {u \in TupleDomain : 
                       /\ tTypeOK(u)'
-                      /\ \E t \in T : 
+                      /\ \E t \in M : 
                             \E S \in SUBSET UnlinearizedEnqs(t)' : 
                                \E seq \in Perm(S) : 
                                   /\ u.state = Concat(t.state, [k \in DOMAIN seq |-> v[seq[k]]])
@@ -497,17 +497,17 @@ L01(p) == /\ pc[p] = 1
 L02(p) == /\ pc[p] = 2
           /\ pc' = [pc EXCEPT ![p] = 3]
           /\ Q'  = [Q  EXCEPT ![i[p]] = v[p]]
-          /\ UNCHANGED <<L, i, j, l, x, v, T>>
+          /\ UNCHANGED <<L, i, j, l, x, v, M>>
           
 L03(p) == /\ pc[p] = 3
           /\ pc' = [pc EXCEPT ![p] = 0]
-          /\ T'  = Filter(p, ACK)
+          /\ M'  = Filter(p, ACK)
           /\ UNCHANGED <<L, Q, i, j, l, x, v>>
           
 L04(p) == /\ pc[p] = 4
           /\ pc' = [pc EXCEPT ![p] = 5]
           /\ l'  = [l  EXCEPT ![p] = L]
-          /\ UNCHANGED <<L, Q, i, j, x, v, T>>
+          /\ UNCHANGED <<L, Q, i, j, x, v, M>>
           
 L05(p) == /\ pc[p] = 5
           /\ IF l[p] = 1
@@ -515,7 +515,7 @@ L05(p) == /\ pc[p] = 5
                      /\ j'  = j
                 ELSE /\ pc' = [pc EXCEPT ![p] = 6]
                      /\ j'  = [j  EXCEPT ![p] = 1]
-          /\ UNCHANGED <<L, Q, i, l, x, v, T>>
+          /\ UNCHANGED <<L, Q, i, l, x, v, M>>
           
 L06(p) == /\ pc[p] = 6
           /\ x' = [x EXCEPT ![p] = Q[j[p]]]
@@ -523,13 +523,13 @@ L06(p) == /\ pc[p] = 6
           /\ IF Q[j[p]] = BOT
                 THEN IF j[p] = l[p] - 1
                         THEN /\ pc' = [pc EXCEPT ![p] = 4]
-                             /\ UNCHANGED <<j, T>>
+                             /\ UNCHANGED <<j, M>>
                         ELSE /\ j' = [j EXCEPT ![p] = j[p] + 1]
-                             /\ UNCHANGED <<pc, T>>
+                             /\ UNCHANGED <<pc, M>>
                 ELSE /\ pc' = [pc EXCEPT ![p] = 7]
-                     /\ T' = {u \in TupleDomain :
+                     /\ M' = {u \in TupleDomain :
                                  /\ tTypeOK(u)'
-                                 /\ \E t \in T :
+                                 /\ \E t \in M :
                                     /\ u.state  = Tl(t.state)
                                     /\ u.res[p] = Hd(t.state)
                                     /\ \A q \in ProcSet : q /= p => u.res[q] = t.res[q]}
@@ -538,7 +538,7 @@ L06(p) == /\ pc[p] = 6
 
 L07(p) == /\ pc[p] = 7
           /\ pc' = [pc EXCEPT ![p] = 0]
-          /\ T'  = Filter(p, x[p])
+          /\ M'  = Filter(p, x[p])
           /\ UNCHANGED <<L, Q, i, j, l, x, v>>
 
 
@@ -555,9 +555,9 @@ Spec == /\ Init
         /\ [][Next]_vars
           
 \* Invariants
-InvL0 == \A p \in ProcSet : pc[p] = 0 => \A t \in T : t.res[p] = BOT
+InvL0 == \A p \in ProcSet : pc[p] = 0 => \A t \in M : t.res[p] = BOT
 
-InvL1 == \A p \in ProcSet : pc[p] = 1 => \A t \in T : t.res[p] = BOT
+InvL1 == \A p \in ProcSet : pc[p] = 1 => \A t \in M : t.res[p] = BOT
 
 InvL2 == \A p \in ProcSet : pc[p] = 2 => /\ 1 <= i[p] 
                                          /\ i[p] < L
@@ -568,13 +568,13 @@ InvL3 == \A p \in ProcSet : pc[p] = 3 => /\ 1 <= i[p]
                                          /\ i[p] < L
                                          /\ \A q \in ProcSet : (pc[q] \in {2, 3} /\ q /= p) => i[q] /= i[p]
 
-InvL4 == \A p \in ProcSet : pc[p] = 4 => \A t \in T : t.res[p] = BOT
+InvL4 == \A p \in ProcSet : pc[p] = 4 => \A t \in M : t.res[p] = BOT
 
-InvL5 == \A p \in ProcSet : pc[p] = 5 => /\ \A t \in T : t.res[p] = BOT
+InvL5 == \A p \in ProcSet : pc[p] = 5 => /\ \A t \in M : t.res[p] = BOT
                                          /\ 1 <= l[p]
                                          /\ l[p] <= L
 
-InvL6 == \A p \in ProcSet : pc[p] = 6 => /\ \A t \in T : t.res[p] = BOT
+InvL6 == \A p \in ProcSet : pc[p] = 6 => /\ \A t \in M : t.res[p] = BOT
                                          /\ 1 <= j[p]
                                          /\ j[p] < l[p]
                                          /\ l[p] <= L
@@ -600,7 +600,7 @@ JInvSeq(seq) == \A m, n \in 1..Len(seq) : (/\ n < m
                                                                     /\ seq[n] < l[p]
                                                                     /\ seq[m] < j[p]
                                                                     
-InvS1 == \A A \in SUBSET (1..(L-1)) : GoodEnqSet(A) => \A seq \in Perm(A) : (JInvSeq(seq) => (\E t \in T : /\ ValuesMatchInds(seq, t.state)
+InvS1 == \A A \in SUBSET (1..(L-1)) : GoodEnqSet(A) => \A seq \in Perm(A) : (JInvSeq(seq) => (\E t \in M : /\ ValuesMatchInds(seq, t.state)
                                                                                                            /\ GoodRes(A, t.res)))
              
 \* Inductive inv
@@ -626,7 +626,7 @@ THEOREM InductiveInvariance == Spec => []Inv
                PROVE  Inv
     OBVIOUS
   <2>1. TypeOK
-    <3>1. T  \in SUBSET {t \in TupleDomain : tTypeOK(t)}
+    <3>1. M  \in SUBSET {t \in TupleDomain : tTypeOK(t)}
       <4> DEFINE t == [state |-> <<>>, res |-> [p \in ProcSet |-> BOT]]
       <4>1. t.state \in [1..0 -> Nat]
         OBVIOUS
@@ -641,7 +641,7 @@ THEOREM InductiveInvariance == Spec => []Inv
                         GoodEnqSet(A),
                         NEW seq \in Perm(A),
                         JInvSeq(seq)
-                 PROVE  \E t \in T : /\ ValuesMatchInds(seq, t.state)
+                 PROVE  \E t \in M : /\ ValuesMatchInds(seq, t.state)
                                      /\ GoodRes(A, t.res)
       BY DEF InvS1
     <3>1. A = {}
@@ -676,7 +676,7 @@ THEOREM InductiveInvariance == Spec => []Inv
           BY <5>2
         <5>3. QED
           BY <5>1, <5>2
-      <4>2. (T \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
+      <4>2. (M \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
         <5>1. TupleDomain = TupleDomain'
           OBVIOUS
         <5>2. \A t \in TupleDomain : tTypeOK(t) = tTypeOK(t)'
@@ -707,7 +707,7 @@ THEOREM InductiveInvariance == Spec => []Inv
         OBVIOUS
       <4>9. (v  \in [ProcSet -> PosInts])'
         OBVIOUS
-      <4>10. (T  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
+      <4>10. (M  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
         OBVIOUS
       <4> QED
         BY Isa, <4>1, <4>10, <4>2, <4>3, <4>4, <4>5, <4>6, <4>7, <4>8, <4>9
@@ -733,7 +733,7 @@ THEOREM InductiveInvariance == Spec => []Inv
         OBVIOUS
       <4>9. (v  \in [ProcSet -> PosInts])'
         OBVIOUS
-      <4>10. (T  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
+      <4>10. (M  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
         OBVIOUS
       <4> QED
         BY Isa, <4>1, <4>10, <4>2, <4>3, <4>4, <4>5, <4>6, <4>7, <4>8, <4>9
@@ -745,15 +745,15 @@ THEOREM InductiveInvariance == Spec => []Inv
         OBVIOUS
       <4>2. (\A k \in PosInts : k > L - 1 => Q[k] = BOT)'
         BY DEF InvL3
-      <4>3. (T  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
-        <5> SUFFICES ASSUME NEW u \in T'
+      <4>3. (M  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
+        <5> SUFFICES ASSUME NEW u \in M'
             PROVE  /\ u \in TupleDomain'
                    /\ tTypeOK(u)'
           BY Zenon
         <5> USE DEF Filter
         <5>1. u \in TupleDomain'
           BY Zenon
-        <5>2. PICK t \in T : /\ t.res[p] = ACK /\ u.state = t.state /\ u.res[p] = BOT
+        <5>2. PICK t \in M : /\ t.res[p] = ACK /\ u.state = t.state /\ u.res[p] = BOT
                              /\ \A q \in ProcSet : q /= p =>  u.res[q] = t.res[q]
           OBVIOUS
         <5>3. tTypeOK(t)
@@ -772,7 +772,7 @@ THEOREM InductiveInvariance == Spec => []Inv
         OBVIOUS
       <4>2. (l  \in [ProcSet -> PosInts])'
         OBVIOUS
-      <4>3. (T  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
+      <4>3. (M  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
         BY Zenon
       <4> QED
         BY <4>1, <4>2, <4>3
@@ -787,7 +787,7 @@ THEOREM InductiveInvariance == Spec => []Inv
           BY <5>2
         <5> QED
           BY <5>1, <5>2
-      <4>2. (T  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
+      <4>2. (M  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
         <5>1. TupleDomain = TupleDomain'
           OBVIOUS
         <5>2. \A t \in TupleDomain : tTypeOK(t) = tTypeOK(t)'
@@ -824,7 +824,7 @@ THEOREM InductiveInvariance == Spec => []Inv
           OBVIOUS
         <5>4. QED
           BY <5>1, <5>2, <5>3
-      <4>3. (T  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
+      <4>3. (M  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
         <5>1. CASE Q[j[p]] = BOT /\ j[p] = l[p] - 1
           OBVIOUS
         <5>2. CASE Q[j[p]] = BOT /\ j[p] # l[p] - 1
@@ -843,15 +843,15 @@ THEOREM InductiveInvariance == Spec => []Inv
         OBVIOUS
       <4>2. (\A k \in PosInts : k > L - 1 => Q[k] = BOT)'
         BY DEF InvL3
-      <4>3. (T  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
-        <5> SUFFICES ASSUME NEW u \in T'
+      <4>3. (M  \in SUBSET {t \in TupleDomain : tTypeOK(t)})'
+        <5> SUFFICES ASSUME NEW u \in M'
             PROVE  /\ u \in TupleDomain'
                    /\ tTypeOK(u)'
           BY Zenon
         <5> USE DEF Filter
         <5>1. u \in TupleDomain'
           BY Zenon
-        <5>2. PICK t \in T : /\ t.res[p] = x[p] /\ u.state = t.state /\ u.res[p] = BOT
+        <5>2. PICK t \in M : /\ t.res[p] = x[p] /\ u.state = t.state /\ u.res[p] = BOT
                              /\ \A q \in ProcSet : q /= p =>  u.res[q] = t.res[q]
           OBVIOUS
         <5>3. tTypeOK(t)
@@ -878,10 +878,10 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <3>2 DEF L01, TypeOK
       <4> SUFFICES ASSUME NEW q \in ProcSet,
                           pc'[q] = 0,
-                          NEW u \in T'
+                          NEW u \in M'
                    PROVE  u.res[q] = BOT
         OBVIOUS
-      <4>1. PICK t \in T : 
+      <4>1. PICK t \in M : 
                    \E S \in SUBSET UnlinearizedEnqs(t)' : 
                       \E seq \in Perm(S) : 
                          /\ u.state = Concat(t.state, [k \in DOMAIN seq |-> v[seq[k]]])
@@ -911,10 +911,10 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <3>4 DEF L03, L07
       <4> SUFFICES ASSUME NEW q \in ProcSet,
                           pc'[q] = 0,
-                          NEW u \in T'
+                          NEW u \in M'
                    PROVE  u.res[q] = BOT
         OBVIOUS
-      <4>1. PICK t \in T : /\ u.state = t.state
+      <4>1. PICK t \in M : /\ u.state = t.state
                            /\ u.res[p] = BOT
                            /\ \A r \in ProcSet : r /= p => u.res[r] = t.res[r]
         BY DEF Filter
@@ -965,10 +965,10 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <3>2 DEF L01, TypeOK
       <4> SUFFICES ASSUME NEW q \in ProcSet,
                           pc'[q] = 1,
-                          NEW u \in T'
+                          NEW u \in M'
                    PROVE  u.res[q] = BOT
         BY Zenon
-      <4>1. PICK t \in T : 
+      <4>1. PICK t \in M : 
                    \E S \in SUBSET UnlinearizedEnqs(t)' : 
                       \E seq \in Perm(S) : 
                          /\ u.state = Concat(t.state, [k \in DOMAIN seq |-> v[seq[k]]])
@@ -998,10 +998,10 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <3>4 DEF L03, L07
       <4> SUFFICES ASSUME NEW q \in ProcSet,
                           pc'[q] = 1,
-                          NEW u \in T'
+                          NEW u \in M'
                    PROVE  u.res[q] = BOT
         OBVIOUS
-      <4>1. PICK t \in T : /\ u.state = t.state
+      <4>1. PICK t \in M : /\ u.state = t.state
                            /\ u.res[p] = BOT
                            /\ \A r \in ProcSet : r /= p => u.res[r] = t.res[r]
         BY DEF Filter
@@ -1246,10 +1246,10 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <3>2 DEF L01, TypeOK
       <4> SUFFICES ASSUME NEW q \in ProcSet,
                           pc'[q] = 4,
-                          NEW u \in T'
+                          NEW u \in M'
                    PROVE  u.res[q] = BOT
         BY Zenon
-      <4>1. PICK t \in T : 
+      <4>1. PICK t \in M : 
                    \E S \in SUBSET UnlinearizedEnqs(t)' : 
                       \E seq \in Perm(S) : 
                          /\ u.state = Concat(t.state, [k \in DOMAIN seq |-> v[seq[k]]])
@@ -1279,10 +1279,10 @@ THEOREM InductiveInvariance == Spec => []Inv
      <4> USE <3>4 DEF L03, L07
      <4> SUFFICES ASSUME NEW q \in ProcSet,
                          pc'[q] = 4,
-                         NEW u \in T'
+                         NEW u \in M'
                   PROVE  u.res[q] = BOT
        OBVIOUS
-     <4>1. PICK t \in T : /\ u.state = t.state
+     <4>1. PICK t \in M : /\ u.state = t.state
                           /\ u.res[p] = BOT
                           /\ \A r \in ProcSet : r /= p => u.res[r] = t.res[r]
        BY DEF Filter
@@ -1345,10 +1345,10 @@ THEOREM InductiveInvariance == Spec => []Inv
          BY <5>1, <5>2
      <4> SUFFICES ASSUME NEW q \in ProcSet,
                          pc'[q] = 5,
-                         NEW u \in T'
+                         NEW u \in M'
                   PROVE  u.res[q] = BOT
        BY <4>1
-     <4>2. PICK t \in T : /\ u.state = t.state
+     <4>2. PICK t \in M : /\ u.state = t.state
                           /\ u.res[p] = BOT
                           /\ \A r \in ProcSet : r /= p => u.res[r] = t.res[r]
        BY DEF Filter
@@ -1373,7 +1373,7 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <3>7 DEF L06, TypeOK
       <4> SUFFICES ASSUME NEW q \in ProcSet,
                           pc'[q] = 5
-                   PROVE  /\ \A u \in T' : u.res[q] = BOT
+                   PROVE  /\ \A u \in M' : u.res[q] = BOT
                           /\ 1 <= l'[q]
                           /\ l'[q] <= L'
         OBVIOUS
@@ -1382,7 +1382,7 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <4>1
       <4>2. 1 <= l'[q] /\ l'[q] <= L'
         OBVIOUS
-      <4>3. \A u \in T' : u.res[q] = BOT
+      <4>3. \A u \in M' : u.res[q] = BOT
         BY DEF tTypeOK
       <4> QED
         BY <4>2, <4>3
@@ -1401,12 +1401,12 @@ THEOREM InductiveInvariance == Spec => []Inv
           PROVE  InvL6'
       <4> SUFFICES ASSUME NEW q \in ProcSet',
                           (pc[q] = 6)'
-                   PROVE  (/\ \A t \in T : t.res[q] = BOT
+                   PROVE  (/\ \A t \in M : t.res[q] = BOT
                            /\ 1 <= j[q]
                            /\ j[q] < l[q]
                            /\ l[q] <= L)'
         BY DEF InvL6
-      <4>1. (\A t \in T : t.res[q] = BOT)'
+      <4>1. (\A t \in M : t.res[q] = BOT)'
         BY <3>2 DEF L01, InvL1, TypeOK, tTypeOK
       <4>2. (1 <= j[q])'
         BY <3>2 DEF L01, InvL1, TypeOK, tTypeOK
@@ -1427,7 +1427,7 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <3>4 DEF L03, L07
       <4> SUFFICES ASSUME NEW q \in ProcSet,
                           pc'[q] = 6
-                   PROVE  /\ \A t \in T' : t.res[q] = BOT
+                   PROVE  /\ \A t \in M' : t.res[q] = BOT
                           /\ (1 <= j[q] /\ j[q] < l[q] /\ l[q] <= L)'
         OBVIOUS
       <4>1. (1 <= j[q] /\ j[q] < l[q] /\ l[q] <= L)'
@@ -1437,11 +1437,11 @@ THEOREM InductiveInvariance == Spec => []Inv
           BY <5>2 DEF TypeOK
         <5> QED
           BY <5>1, <5>2
-      <4>2. \A u \in T' : u.res[q] = BOT
-        <5> SUFFICES ASSUME NEW u \in T'
+      <4>2. \A u \in M' : u.res[q] = BOT
+        <5> SUFFICES ASSUME NEW u \in M'
                      PROVE  u.res[q] = BOT
           OBVIOUS
-        <5>1. PICK t \in T : /\ u.state = t.state
+        <5>1. PICK t \in M : /\ u.state = t.state
                              /\ u.res[p] = BOT
                              /\ \A r \in ProcSet : r /= p => u.res[r] = t.res[r]
           BY DEF Filter
@@ -1463,12 +1463,12 @@ THEOREM InductiveInvariance == Spec => []Inv
           PROVE  InvL6'
       <4> SUFFICES ASSUME NEW q \in ProcSet',
                           (pc[q] = 6)'
-                   PROVE  (/\ \A t \in T : t.res[q] = BOT
+                   PROVE  (/\ \A t \in M : t.res[q] = BOT
                            /\ 1 <= j[q]
                            /\ j[q] < l[q]
                            /\ l[q] <= L)'
         BY DEF InvL6
-      <4>1. (\A t \in T : t.res[q] = BOT)'
+      <4>1. (\A t \in M : t.res[q] = BOT)'
         BY <3>6 DEF L05, InvL5, InvL6, TypeOK, tTypeOK
       <4>2. (1 <= j[q])'
         <5>1. CASE q = p
@@ -1494,7 +1494,7 @@ THEOREM InductiveInvariance == Spec => []Inv
       <4> USE <3>7 DEF L06, TypeOK
       <4> SUFFICES ASSUME NEW q \in ProcSet,
                           pc'[q] = 6
-                   PROVE  /\ \A t \in T' : t.res[q] = BOT
+                   PROVE  /\ \A t \in M' : t.res[q] = BOT
                           /\ (1 <= j[q] /\ j[q] < l[q] /\ l[q] <= L)'
         OBVIOUS
       <4>0. CASE p # q
@@ -1505,7 +1505,7 @@ THEOREM InductiveInvariance == Spec => []Inv
           BY <5>2
         <5>3. CASE Q[j[p]] # BOT
           <6> USE <5>3
-          <6>1. \A u \in T' : u.res[q] = BOT
+          <6>1. \A u \in M' : u.res[q] = BOT
             OBVIOUS
           <6>2. (1 <= j[q] /\ j[q] < l[q] /\ l[q] <= L)'
             OBVIOUS
@@ -1539,10 +1539,10 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A),
                           JInvSeq(seq)'
-                   PROVE  \E t \in T' : /\ ValuesMatchInds(seq, t.state)'
+                   PROVE  \E t \in M' : /\ ValuesMatchInds(seq, t.state)'
                                         /\ GoodRes(A, t.res)'
         OBVIOUS
-      <4>1. PICK t \in T : ValuesMatchInds(seq, t.state) /\ GoodRes(A, t.res)
+      <4>1. PICK t \in M : ValuesMatchInds(seq, t.state) /\ GoodRes(A, t.res)
         BY DEF GoodEnqSet, JInvSeq
       <4>2. GoodRes(A, t.res) = GoodRes(A, t.res)'
         BY DEF GoodRes
@@ -1587,7 +1587,7 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A)',
                           JInvSeq(seq)'
-                   PROVE  \E u \in T' : /\ ValuesMatchInds(seq, u.state)'
+                   PROVE  \E u \in M' : /\ ValuesMatchInds(seq, u.state)'
                                         /\ GoodRes(A, u.res)'
         BY Zenon DEF TypeOK
       <4>1. i'[p] = L
@@ -1608,7 +1608,7 @@ THEOREM InductiveInvariance == Spec => []Inv
           BY DEF JInvSeq, TypeOK
         <5>6. A \in SUBSET 1..(L-1)
           BY DEF TypeOK
-        <5>7. PICK t \in T : /\ ValuesMatchInds(seq, t.state)
+        <5>7. PICK t \in M : /\ ValuesMatchInds(seq, t.state)
                              /\ GoodRes(A, t.res)
           BY <5>3, <5>4, <5>5, <5>6
         <5> DEFINE S_ == {} 
@@ -1629,7 +1629,7 @@ THEOREM InductiveInvariance == Spec => []Inv
             BY <6>2, <6>3
           <6> QED
             BY <6>1, <6>4
-        <5>11. t \in T'
+        <5>11. t \in M'
           BY <5>8, <5>9, <5>10
         <5>12. GoodRes(A, t.res)'
           BY <5>7 DEF GoodRes
@@ -1861,7 +1861,7 @@ THEOREM InductiveInvariance == Spec => []Inv
           <6> QED
             BY <6>1, <6>8, <6>11, <6>12
         <5> HIDE <3>2
-        <5>10. PICK t \in T : /\ ValuesMatchInds(seq_, t.state)
+        <5>10. PICK t \in M : /\ ValuesMatchInds(seq_, t.state)
                               /\ GoodRes(A_, t.res)
           BY <5>6, <5>7, <5>8, <5>9, Zenon
         <5> USE <3>2
@@ -1915,21 +1915,21 @@ THEOREM InductiveInvariance == Spec => []Inv
                          
         \* Some ad hoc tricks to facilitate proof.
         <5> DEFINE P(w) == /\ tTypeOK(w)'
-                           /\ \E y \in T : \E B \in SUBSET UnlinearizedEnqs(y)' : \E pi \in Perm(B) : 
+                           /\ \E y \in M : \E B \in SUBSET UnlinearizedEnqs(y)' : \E pi \in Perm(B) : 
                                   /\ w.state = Concat(y.state, [m \in DOMAIN pi |-> v[pi[m]]])
                                   /\ \A q \in ProcSet : IF q \in B THEN w.res[q] = ACK ELSE w.res[q] = y.res[q]
         
-        <5>14. T'  = {w \in TupleDomain : P(w)}
+        <5>14. M'  = {w \in TupleDomain : P(w)}
           OBVIOUS
         
         <5> HIDE <3>2 DEF P
-        <5>15. u \in T' <=> /\ u \in TupleDomain
+        <5>15. u \in M' <=> /\ u \in TupleDomain
                             /\ P(u)
           BY <5>14
                      
-        <5>16. u \in T' <=> (/\ u \in TupleDomain 
+        <5>16. u \in M' <=> (/\ u \in TupleDomain 
                              /\ tTypeOK(u)'
-                             /\ \E y \in T : (\E B \in SUBSET UnlinearizedEnqs(y)' : (\E pi \in Perm(B) : 
+                             /\ \E y \in M : (\E B \in SUBSET UnlinearizedEnqs(y)' : (\E pi \in Perm(B) : 
                                   (/\ u.state = Concat(y.state, [m \in DOMAIN pi |-> v[pi[m]]])
                                    /\ \A q \in ProcSet : IF q \in B THEN u.res[q] = ACK ELSE u.res[q] = y.res[q]))))
           BY <5>15, Zenon DEF P
@@ -2299,7 +2299,7 @@ THEOREM InductiveInvariance == Spec => []Inv
         
         <5>22. (\E B \in SUBSET UnlinearizedEnqs(t)' : (\E pi \in Perm(B) : 
                    (/\ u.state = Concat(t.state, [m \in DOMAIN pi |-> v[pi[m]]])
-                    /\ \A q \in ProcSet : IF q \in B THEN u.res[q] = ACK ELSE u.res[q] = t.res[q]))) => u \in T'
+                    /\ \A q \in ProcSet : IF q \in B THEN u.res[q] = ACK ELSE u.res[q] = t.res[q]))) => u \in M'
           BY <5>10, <5>16, <5>17, <5>21, Zenon
           
         <5>23. Sp \in SUBSET UnlinearizedEnqs(t)'
@@ -2422,7 +2422,7 @@ THEOREM InductiveInvariance == Spec => []Inv
             BY <6>1, <6>2, Isa DEF Perm
         
         <5>25. (/\ u.state = Concat(t.state, [m \in DOMAIN seqp |-> v[seqp[m]]])
-                /\ \A q \in ProcSet : IF q \in Sp THEN u.res[q] = ACK ELSE u.res[q] = t.res[q]) => u \in T'
+                /\ \A q \in ProcSet : IF q \in Sp THEN u.res[q] = ACK ELSE u.res[q] = t.res[q]) => u \in M'
           BY <5>22, <5>23, <5>24, Zenon
         
         <5>26. u.state = Concat(t.state, [m \in DOMAIN seqp |-> v[seqp[m]]])
@@ -2431,7 +2431,7 @@ THEOREM InductiveInvariance == Spec => []Inv
         <5>27. \A q \in ProcSet : IF q \in Sp THEN u.res[q] = ACK ELSE u.res[q] = t.res[q]
           OBVIOUS
         
-        <5>28. u \in T'
+        <5>28. u \in M'
           BY <5>25, <5>26, <5>27
 
         <5> HIDE DEF u
@@ -2808,10 +2808,10 @@ THEOREM InductiveInvariance == Spec => []Inv
         
         \* Some ad hoc tricks to hide complex definitions for the pf to go through.
         <5> DEFINE G(w) == ValuesMatchInds(seq, w.state)' /\ GoodRes(A, w.res)'       
-        <5>33. (\E w \in T' : ValuesMatchInds(seq, w.state)' /\ GoodRes(A, w.res)') = (\E w \in T' : G(w))
+        <5>33. (\E w \in M' : ValuesMatchInds(seq, w.state)' /\ GoodRes(A, w.res)') = (\E w \in M' : G(w))
           OBVIOUS
         <5> HIDE <3>2 DEF G, u
-        <5>34. u \in T' /\ G(u) => (\E w \in T' : G(w))
+        <5>34. u \in M' /\ G(u) => (\E w \in M' : G(w))
           OBVIOUS
         <5>35. G(u)
           BY <5>31, <5>32 DEF G
@@ -2828,14 +2828,14 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A),
                           JInvSeq(seq)'
-                   PROVE  \E t \in T' : /\ ValuesMatchInds(seq, t.state)'
+                   PROVE  \E t \in M' : /\ ValuesMatchInds(seq, t.state)'
                                         /\ GoodRes(A, t.res)'
         OBVIOUS
       <4>1. GoodEnqSet(A)
         BY DEF GoodEnqSet, TypeOK
       <4>2. JInvSeq(seq)
         BY DEF JInvSeq, TypeOK
-      <4>3. PICK t \in T : /\ ValuesMatchInds(seq, t.state)
+      <4>3. PICK t \in M : /\ ValuesMatchInds(seq, t.state)
                            /\ GoodRes(A, t.res)
         BY <4>1, <4>2
       <4>4. i[p] \in A
@@ -2889,14 +2889,14 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A),
                           JInvSeq(seq)'
-                   PROVE  \E t \in T' : /\ ValuesMatchInds(seq, t.state)'
+                   PROVE  \E t \in M' : /\ ValuesMatchInds(seq, t.state)'
                                         /\ GoodRes(A, t.res)'
         OBVIOUS
       <4>1. GoodEnqSet(A)
         BY DEF GoodEnqSet
       <4>2. JInvSeq(seq)
         BY DEF JInvSeq
-      <4>3. PICK t \in T : /\ ValuesMatchInds(seq, t.state)
+      <4>3. PICK t \in M : /\ ValuesMatchInds(seq, t.state)
                            /\ GoodRes(A, t.res)
         BY <4>1, <4>2
       <4>4. t.res[p] = ACK
@@ -2910,8 +2910,8 @@ THEOREM InductiveInvariance == Spec => []Inv
         BY <4>3 DEF TupleDomain, TypeOK
       <4>9. \A r \in ProcSet : r /= p =>  u.res[r] = t.res[r]
         OBVIOUS
-      <4>10. u \in T'
-        <5>1. \E t_ \in T : /\ t_.res[p] =ACK
+      <4>10. u \in M'
+        <5>1. \E t_ \in M : /\ t_.res[p] =ACK
                             /\ u.state = t_.state
                             /\ u.res[p] = BOT
                             /\ \A q \in ProcSet : q /= p =>  u.res[q] = t_.res[q]
@@ -2970,14 +2970,14 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A),
                           JInvSeq(seq)'
-                   PROVE  \E t \in T' : /\ ValuesMatchInds(seq, t.state)'
+                   PROVE  \E t \in M' : /\ ValuesMatchInds(seq, t.state)'
                                         /\ GoodRes(A, t.res)'
         OBVIOUS
       <4>1. GoodEnqSet(A)
         BY DEF GoodEnqSet
       <4>2. JInvSeq(seq)
         BY DEF JInvSeq
-      <4>3. PICK t \in T : /\ ValuesMatchInds(seq, t.state)
+      <4>3. PICK t \in M : /\ ValuesMatchInds(seq, t.state)
                            /\ GoodRes(A, t.res)
         BY <4>1, <4>2
       <4>4. ValuesMatchInds(seq, t.state)'
@@ -3017,7 +3017,7 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A),
                           JInvSeq(seq)'
-                   PROVE  \E t \in T' : /\ ValuesMatchInds(seq, t.state)'
+                   PROVE  \E t \in M' : /\ ValuesMatchInds(seq, t.state)'
                                         /\ GoodRes(A, t.res)'
         OBVIOUS 
       <4>1. GoodEnqSet(A)
@@ -3095,7 +3095,7 @@ THEOREM InductiveInvariance == Spec => []Inv
             BY <6>1, <6>2
         <5> QED
           BY <5>3, <5>4
-      <4>5. PICK t \in T : /\ ValuesMatchInds(seq, t.state)
+      <4>5. PICK t \in M : /\ ValuesMatchInds(seq, t.state)
                            /\ GoodRes(A, t.res)
         BY <4>1, <4>4
       <4>6. ValuesMatchInds(seq, t.state)'
@@ -3147,7 +3147,7 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A),
                           JInvSeq(seq)'
-                   PROVE  \E t \in T' : /\ ValuesMatchInds(seq, t.state)'
+                   PROVE  \E t \in M' : /\ ValuesMatchInds(seq, t.state)'
                                         /\ GoodRes(A, t.res)'
         OBVIOUS
       <4>1. \A q \in ProcSet : q /= p => /\ pc[q] = pc'[q]
@@ -3222,7 +3222,7 @@ THEOREM InductiveInvariance == Spec => []Inv
               BY <7>1, <7>2
           <6> QED
             BY <6>2, <6>3
-        <5>3. PICK t \in T : ValuesMatchInds(seq, t.state) /\ GoodRes(A, t.res)
+        <5>3. PICK t \in M : ValuesMatchInds(seq, t.state) /\ GoodRes(A, t.res)
           BY <5>1, <5>2
         <5>4. ValuesMatchInds(seq, t.state)'
           <6> DEFINE vals1 == [k \in DOMAIN seq |-> CASE Q[seq[k]] /= BOT -> Q[seq[k]]
@@ -3403,7 +3403,7 @@ THEOREM InductiveInvariance == Spec => []Inv
               BY <7>1, <7>2
           <6> QED
             BY <6>1, <6>2, <6>3
-        <5>12. PICK t \in T : /\ ValuesMatchInds(seq_, t.state)
+        <5>12. PICK t \in M : /\ ValuesMatchInds(seq_, t.state)
                               /\ GoodRes(A_, t.res)
           BY <5>8, <5>9, <5>10, <5>11
           
@@ -3411,12 +3411,12 @@ THEOREM InductiveInvariance == Spec => []Inv
         
         <5>14. u.res[p] = Hd(t.state)
           BY DEF TypeOK, TupleDomain
-        <5>15. u \in T'
+        <5>15. u \in M'
           <6>1. u.state = Tl(t.state)
             OBVIOUS
           <6>2. \A r \in ProcSet : r /= p => u.res[r] = t.res[r]
             OBVIOUS
-          <6>3. \E t_ \in T : /\ u.state = Tl(t_.state)
+          <6>3. \E t_ \in M : /\ u.state = Tl(t_.state)
                               /\ u.res[p] = Hd(t_.state)
                               /\ \A r \in ProcSet : r /= p => u.res[r] = t_.res[r]
             BY <5>14, <6>1, <6>2
@@ -3603,14 +3603,14 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A),
                           JInvSeq(seq)'
-                   PROVE  \E t \in T' : /\ ValuesMatchInds(seq, t.state)'
+                   PROVE  \E t \in M' : /\ ValuesMatchInds(seq, t.state)'
                                         /\ GoodRes(A, t.res)'
         OBVIOUS
       <4>1. GoodEnqSet(A)
         BY DEF GoodEnqSet
       <4>2. JInvSeq(seq)
         BY DEF JInvSeq
-      <4>3. PICK t \in T : /\ ValuesMatchInds(seq, t.state)
+      <4>3. PICK t \in M : /\ ValuesMatchInds(seq, t.state)
                            /\ GoodRes(A, t.res)
         BY <4>1, <4>2
       <4>4. t.res[p] = x[p]
@@ -3624,8 +3624,8 @@ THEOREM InductiveInvariance == Spec => []Inv
         BY <4>3 DEF TupleDomain, TypeOK
       <4>9. \A r \in ProcSet : r /= p =>  u.res[r] = t.res[r]
         OBVIOUS
-      <4>10. u \in T'
-        <5>1. \E t_ \in T : /\ t_.res[p] = x[p]
+      <4>10. u \in M'
+        <5>1. \E t_ \in M : /\ t_.res[p] = x[p]
                             /\ u.state = t_.state
                             /\ u.res[p] = BOT
                             /\ \A r \in ProcSet : r /= p =>  u.res[r] = t_.res[r]
@@ -3659,10 +3659,10 @@ THEOREM InductiveInvariance == Spec => []Inv
                           GoodEnqSet(A)',
                           NEW seq \in Perm(A),
                           JInvSeq(seq)'
-                   PROVE  \E t \in T' : /\ ValuesMatchInds(seq, t.state)'
+                   PROVE  \E t \in M' : /\ ValuesMatchInds(seq, t.state)'
                                         /\ GoodRes(A, t.res)'
         OBVIOUS
-      <4>1. PICK t \in T : ValuesMatchInds(seq, t.state) /\ GoodRes(A, t.res)
+      <4>1. PICK t \in M : ValuesMatchInds(seq, t.state) /\ GoodRes(A, t.res)
         BY DEF GoodEnqSet, JInvSeq
       <4>2. GoodRes(A, t.res)' /\ ValuesMatchInds(seq, t.state)'
         BY <4>1 DEF GoodRes, ValuesMatchInds
@@ -3675,9 +3675,9 @@ THEOREM InductiveInvariance == Spec => []Inv
 <1>3. QED
   BY <1>1, <1>2
                   
-THEOREM ImpliedCorrectness == Inv => T # {}
+THEOREM ImpliedCorrectness == Inv => M # {}
  <1> SUFFICES ASSUME Inv
-              PROVE  T # {}
+              PROVE  M # {}
    OBVIOUS
  <1> DEFINE A == {k \in 1..L - 1 : Q[k] /= BOT}
  <1>1. A \in SUBSET 1..(L - 1)
@@ -3758,14 +3758,14 @@ THEOREM ImpliedCorrectness == Inv => T # {}
    <2> QED
      BY <2>4, <2>5
  <1> HIDE <1>5
- <1>8. \E t \in T : /\ ValuesMatchInds(seq, t.state)
+ <1>8. \E t \in M : /\ ValuesMatchInds(seq, t.state)
                     /\ GoodRes(A, t.res)
    BY <1>1, <1>2, <1>7, <1>6 DEF Inv, InvS1
  <1> QED
    BY <1>8               
 
 \* Final step!
-THEOREM AlgCorrectness == Spec => [](T # {})
+THEOREM AlgCorrectness == Spec => [](M # {})
   BY InductiveInvariance, ImpliedCorrectness, PTL
 
 ===================================================================================================
