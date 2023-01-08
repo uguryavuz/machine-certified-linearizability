@@ -61,11 +61,10 @@ EXTENDS Integers, FiniteSets, TLAPS, FiniteSetTheorems
 
 CONSTANTS PROCSET, N, NIL, ACK
 
-VARIABLES Par, x, y, u, v, a, b, pc, P
+VARIABLES Par, x, y, u, v, a, b, pc, M
 vars == <<Par, x, y, u, v, a, b, pc>>
-augs == <<P>>
-allvars == <<Par, x, y, u, v, a, b, pc, P>>
-M == P
+augs == <<M>>
+allvars == <<Par, x, y, u, v, a, b, pc, M>>
 
 InvocationLines  == {"F1", "U1"}
 Lines            == {"F1", "F2", "F3", "F4", "F5", "F6",
@@ -91,7 +90,7 @@ InitVars == /\ Par  = [z \in NodeSet |-> z]
 
 sigmaInit   == [z \in NodeSet |-> {z}]
 fInit       == [p \in PROCSET |-> NIL]
-InitAug     == P = {[sigma |-> sigmaInit, f |-> fInit]}
+InitAug     == M = {[sigma |-> sigmaInit, f |-> fInit]}
 
 Init == InitVars /\ InitAug
 
@@ -267,21 +266,21 @@ LineU11(p) == /\ pc[p] = "U11"
   F6:       return u_p
 *)
 
-AugF1(p) == P' = P
+AugF1(p) == M' = M
 
 AugF2(p) == IF Par[u[p]] = u[p]
-               THEN P' = {t \in AtomConfigs : \E told \in P : /\ told.f[p] = NIL
+               THEN M' = {t \in AtomConfigs : \E told \in M : /\ told.f[p] = NIL
                                                               /\ t.sigma = told.sigma
                                                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]}
-               ELSE P' = P
+               ELSE M' = M
 
-AugF3(p) == P' = P
+AugF3(p) == M' = M
 
-AugF4(p) == P' = P
+AugF4(p) == M' = M
 
-AugF5(p) == P' = P
+AugF5(p) == M' = M
 
-AugF6(p) == P' = {t \in AtomConfigs : \E told \in P : /\ told.f[p] = u[p]
+AugF6(p) == M' = {t \in AtomConfigs : \E told \in M : /\ told.f[p] = u[p]
                                                       /\ t.sigma = told.sigma
                                                       /\ t.f = [told.f EXCEPT ![p] = NIL]}
                                                       
@@ -312,15 +311,15 @@ AugF6(p) == P' = {t \in AtomConfigs : \E told \in P : /\ told.f[p] = u[p]
   U11:      return ack
 *)
 
-AugU1(p) == P' = P
+AugU1(p) == M' = M
                        
 AugU2(p) == IF u[p] = v[p] 
-                THEN P' = {t \in AtomConfigs : \E told \in P: /\ told.f[p] = NIL
+                THEN M' = {t \in AtomConfigs : \E told \in M: /\ told.f[p] = NIL
                                                               /\ t.sigma = told.sigma
                                                               /\ t.f = [told.f EXCEPT ![p] = ACK]
                           }
                 ELSE IF (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p]) 
-                        THEN P' = {t \in AtomConfigs : \E told \in P: /\ told.f[p] = NIL
+                        THEN M' = {t \in AtomConfigs : \E told \in M: /\ told.f[p] = NIL
                                                                       /\ \A z \in NodeSet: 
                                                                          (z \in told.sigma[x[p]] \cup told.sigma[y[p]])
                                                                             => (t.sigma[z] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -329,25 +328,25 @@ AugU2(p) == IF u[p] = v[p]
                                                                             => (t.sigma[z] = told.sigma[z])
                                                                       /\ t.f = [told.f EXCEPT ![p] = ACK]}
                                   
-                        ELSE P' = P
+                        ELSE M' = M
 
-AugU3(p) == P' = P
+AugU3(p) == M' = M
 
-AugU4(p) == P' = P
+AugU4(p) == M' = M
 
-AugU5(p) == P' = P
+AugU5(p) == M' = M
 
-AugU6(p) == P' = P
+AugU6(p) == M' = M
 
-AugU7(p) == P' = P
+AugU7(p) == M' = M
 
-AugU8(p) == P' = P
+AugU8(p) == M' = M
 
-AugU9(p) == P' = P
+AugU9(p) == M' = M
 
-AugU10(p) == P' = P
+AugU10(p) == M' = M
 
-AugU11(p) == P' = {t \in AtomConfigs : \E told \in P : /\ told.f[p] = ACK
+AugU11(p) == M' = {t \in AtomConfigs : \E told \in M : /\ told.f[p] = ACK
                                                        /\ t.sigma = told.sigma
                                                        /\ t.f = [told.f EXCEPT ![p] = NIL]}
                                                        
@@ -408,7 +407,7 @@ Validv      == v   \in [PROCSET -> NodeSet]
 Valida      == a   \in [PROCSET -> NodeSet]
 Validb      == b   \in [PROCSET -> NodeSet]
 Validpc     == pc  \in [PROCSET -> Lines]
-ValidP      == P   \in SUBSET AtomConfigs
+ValidP      == M   \in SUBSET AtomConfigs
 
 TypeOK == /\ ValidPar
           /\ Validx
@@ -422,13 +421,13 @@ TypeOK == /\ ValidPar
           
 ParPointsUp       == \A z \in NodeSet: Par[z] >= z
 
-SigmaIsPartition1 == \A z \in NodeSet: \A t \in P: 
+SigmaIsPartition1 == \A z \in NodeSet: \A t \in M: 
                         z \in t.sigma[z]
-SigmaIsPartition2 == \A w, z \in NodeSet: \A t \in P: 
+SigmaIsPartition2 == \A w, z \in NodeSet: \A t \in M: 
                         (w \in t.sigma[z]) => (t.sigma[w] = t.sigma[z])
-SigmaIsCoarse     == \A w,z \in NodeSet: \A t \in P: 
+SigmaIsCoarse     == \A w,z \in NodeSet: \A t \in M: 
                         (Par[w] = z) => (t.sigma[w] = t.sigma[z])
-SigmaIsFine       == \A w,z \in NodeSet: \A t \in P: 
+SigmaIsFine       == \A w,z \in NodeSet: \A t \in M: 
                         (w # z /\ Par[w] = w /\ Par[z] = z) => (t.sigma[w] # t.sigma[z])
 
 (*
@@ -443,26 +442,26 @@ SigmaIsFine       == \A w,z \in NodeSet: \A t \in P:
             goto F2
   F6:       return u_p
 *)
-InvF1  == \A p \in PROCSET : \A t \in P : 
+InvF1  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "F1") => (t.f[p] = NIL)
-InvF2  == \A p \in PROCSET : \A t \in P : 
+InvF2  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "F2") => (/\ t.sigma[u[p]] = t.sigma[x[p]] 
                                 /\ t.f[p] = NIL)
-InvF3  == \A p \in PROCSET : \A t \in P :
+InvF3  == \A p \in PROCSET : \A t \in M :
              (pc[p] = "F3") => (/\ t.sigma[u[p]] = t.sigma[x[p]] 
                                 /\ t.sigma[a[p]] = t.sigma[x[p]]
                                 /\ t.f[p] = NIL)
-InvF4  == \A p \in PROCSET : \A t \in P :
+InvF4  == \A p \in PROCSET : \A t \in M :
              (pc[p] = "F4") => (/\ t.sigma[u[p]] = t.sigma[x[p]] 
                                 /\ t.sigma[a[p]] = t.sigma[x[p]] 
                                 /\ t.sigma[b[p]] = t.sigma[x[p]]
                                 /\ t.f[p] = NIL)
-InvF5  == \A p \in PROCSET : \A t \in P :
+InvF5  == \A p \in PROCSET : \A t \in M :
              (pc[p] = "F5") => (/\ t.sigma[u[p]] = t.sigma[x[p]] 
                                 /\ t.sigma[a[p]] = t.sigma[x[p]] 
                                 /\ t.sigma[b[p]] = t.sigma[x[p]]
                                 /\ t.f[p] = NIL)
-InvF6  == \A p \in PROCSET : \A t \in P :
+InvF6  == \A p \in PROCSET : \A t \in M :
              (pc[p] = "F6") => (t.f[p] = u[p])
 
 InvFEx == \A p \in PROCSET : /\ (pc[p] = "F3" => a[p] >= u[p])
@@ -492,55 +491,55 @@ InvFEx == \A p \in PROCSET : /\ (pc[p] = "F3" => a[p] >= u[p])
             
   U11:      return ack
 *)
-InvU1  == \A p \in PROCSET : \A t \in P : 
+InvU1  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U1") => (t.f[p] = NIL)
-InvU2  == \A p \in PROCSET : \A t \in P : 
+InvU2  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U2") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                 /\ t.sigma[v[p]] = t.sigma[y[p]]
                                 /\ t.f[p] = NIL)
-InvU3  == \A p \in PROCSET : \A t \in P : 
+InvU3  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U3") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                 /\ t.sigma[v[p]] = t.sigma[y[p]]
                                 /\ t.f[p] = NIL)
-InvU4  == \A p \in PROCSET : \A t \in P : 
+InvU4  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U4") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                 /\ t.sigma[a[p]] = t.sigma[x[p]]
                                 /\ t.sigma[v[p]] = t.sigma[y[p]]
                                 /\ t.f[p] = NIL)
-InvU5  == \A p \in PROCSET : \A t \in P : 
+InvU5  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U5") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                 /\ t.sigma[a[p]] = t.sigma[x[p]]
                                 /\ t.sigma[b[p]] = t.sigma[x[p]]
                                 /\ t.sigma[v[p]] = t.sigma[y[p]]
                                 /\ t.f[p] = NIL)
-InvU6  == \A p \in PROCSET : \A t \in P : 
+InvU6  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U6") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                 /\ t.sigma[a[p]] = t.sigma[x[p]]
                                 /\ t.sigma[b[p]] = t.sigma[x[p]]
                                 /\ t.sigma[v[p]] = t.sigma[y[p]]
                                 /\ t.f[p] = NIL)
-InvU7  == \A p \in PROCSET : \A t \in P : 
+InvU7  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U7") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                 /\ t.sigma[v[p]] = t.sigma[y[p]]
                                 /\ t.f[p] = NIL)
-InvU8  == \A p \in PROCSET : \A t \in P : 
+InvU8  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U8") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                 /\ t.sigma[v[p]] = t.sigma[y[p]]
                                 /\ t.sigma[a[p]] = t.sigma[y[p]]
                                 /\ t.f[p] = NIL)
-InvU9  == \A p \in PROCSET : \A t \in P : 
+InvU9  == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U9") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                 /\ t.sigma[v[p]] = t.sigma[y[p]]
                                 /\ t.sigma[a[p]] = t.sigma[y[p]]
                                 /\ t.sigma[b[p]] = t.sigma[y[p]]
                                 /\ t.f[p] = NIL)
-InvU10 == \A p \in PROCSET : \A t \in P : 
+InvU10 == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U10") => (/\ t.sigma[u[p]] = t.sigma[x[p]]
                                  /\ t.sigma[v[p]] = t.sigma[y[p]]
                                  /\ t.sigma[a[p]] = t.sigma[y[p]]
                                  /\ t.sigma[b[p]] = t.sigma[y[p]]
                                  /\ t.f[p] = NIL)
-InvU11 == \A p \in PROCSET : \A t \in P : 
+InvU11 == \A p \in PROCSET : \A t \in M : 
              (pc[p] = "U11") => (t.f[p] = ACK)
 
 InvUEx == \A p \in PROCSET : /\ (pc[p] = "U4" => a[p] >= u[p])
@@ -550,7 +549,7 @@ InvUEx == \A p \in PROCSET : /\ (pc[p] = "U4" => a[p] >= u[p])
                              /\ (pc[p] = "U9" => (b[p] >= a[p] /\ a[p] >= v[p]))
                              /\ (pc[p] = "U10" => (b[p] >= a[p] /\ a[p] >= v[p]))
 
-Linearizable == P # {}
+Linearizable == M # {}
 
 I == /\ TypeOK
      /\ ParPointsUp
@@ -626,7 +625,7 @@ LEMMA MaxIsRoot == ASSUME TypeOK,
                           SigmaIsCoarse,
                           SigmaIsFine,
                           NEW w \in NodeSet,
-                          NEW t \in P,
+                          NEW t \in M,
                           (w = Par[w])
              PROVE Max(t.sigma[w]) = Par[Max(t.sigma[w])]
   <1> USE NisNat DEF TypeOK, ValidPar, ValidP, AtomConfigs, States, PowerSetNodes, NodeSet
@@ -655,7 +654,7 @@ LEMMA MaxIsRoot == ASSUME TypeOK,
 LEMMA UniqueRoot == ASSUME TypeOK,
                            SigmaIsPartition2,
                            SigmaIsFine,
-                           NEW t \in P,
+                           NEW t \in M,
                            NEW w \in NodeSet,
                            NEW z \in NodeSet,
                            (w = Par[w] /\ z = Par[z] /\ z \in t.sigma[w])
@@ -671,7 +670,7 @@ LEMMA RootIsMax == ASSUME TypeOK,
                           SigmaIsCoarse,
                           SigmaIsFine,
                           NEW w \in NodeSet,
-                          NEW t \in P,
+                          NEW t \in M,
                           (w = Par[w])
              PROVE Max(t.sigma[w]) = w
   <1> USE NisNat DEF TypeOK, ValidPar, ValidP, AtomConfigs, States, PowerSetNodes, NodeSet
@@ -942,11 +941,11 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>3. SigmaIsPartition1'
       <3> USE DEF SigmaIsPartition1
       <3> SUFFICES ASSUME NEW z \in NodeSet',
-                          NEW t \in P'
+                          NEW t \in M'
                    PROVE  (z \in t.sigma[z])'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -959,12 +958,12 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>4. SigmaIsPartition2'
       <3> USE DEF SigmaIsPartition2
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (w \in t.sigma[z])'
                    PROVE  (t.sigma[w] = t.sigma[z])'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -977,12 +976,12 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>5. SigmaIsCoarse'
       <3> USE DEF SigmaIsCoarse
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (Par[w] = z)'
                    PROVE  (t.sigma[w] = t.sigma[z])'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -995,12 +994,12 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>6. SigmaIsFine'
       <3> USE DEF SigmaIsFine
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (w # z /\ Par[w] = w /\ Par[z] = z)'
                    PROVE  (t.sigma[w] # t.sigma[z])'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1013,12 +1012,12 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>7. InvF1'
       <3> USE NextTypeSafety DEF InvF1, InvocationLines, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F1")'
                    PROVE  (t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1031,13 +1030,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>8. InvF2'
       <3> USE DEF InvF2, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F2")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]] 
                            /\ t.f[p_1] = NIL)'
         BY DEF InvF2
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1050,14 +1049,14 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>9. InvF3'
       <3> USE DEF InvF3, TypeOK, Validpc, Valida, Validu, ValidPar
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F3")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]] 
                            /\ t.sigma[a[p_1]] = t.sigma[x[p_1]]
                            /\ t.f[p_1] = NIL)'
         BY DEF InvF3
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1070,7 +1069,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>10. InvF4'
       <3> USE DEF InvF4, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F4")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]] 
                            /\ t.sigma[a[p_1]] = t.sigma[x[p_1]] 
@@ -1078,7 +1077,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1091,7 +1090,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>11. InvF5'
       <3> USE DEF InvF5, TypeOK, Validpc, Valida, Validb, Validu, ValidPar
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F5")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]] 
                            /\ t.sigma[a[p_1]] = t.sigma[x[p_1]] 
@@ -1099,7 +1098,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                            /\ t.f[p_1] = NIL)'
         BY DEF InvF5
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1114,7 +1113,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   TypeOK, ValidPar, Validu, Validpc, 
                   AtomConfigs, Rets
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F6")'
                    PROVE  (t.f[p_1] = u[p_1])'
         BY DEF InvF6
@@ -1122,7 +1121,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>1
         <4>1. u'[p] = Max(t.sigma[u'[p]])
           BY Isa, RootIsMax
-        <4>2. PICK told \in P: /\ told.f[p] = NIL 
+        <4>2. PICK told \in M: /\ told.f[p] = NIL 
                                /\ t.sigma = told.sigma 
                                /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           OBVIOUS
@@ -1135,12 +1134,12 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>13. InvU1'
       <3> USE DEF InvU1, InvocationLines, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U1")'
                    PROVE  (t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1153,14 +1152,14 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>14. InvU2'
       <3> USE DEF InvU2, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U2")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[v[p_1]] = t.sigma[y[p_1]]
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1173,14 +1172,14 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>15. InvU3'
       <3> USE DEF InvU3, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U3")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[v[p_1]] = t.sigma[y[p_1]]
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1193,7 +1192,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>16. InvU4'
       <3> USE DEF InvU4, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U4")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[a[p_1]] = t.sigma[x[p_1]]
@@ -1201,7 +1200,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1214,7 +1213,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>17. InvU5'
       <3> USE DEF InvU5, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U5")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[a[p_1]] = t.sigma[x[p_1]]
@@ -1223,7 +1222,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1236,7 +1235,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>18. InvU6'
       <3> USE DEF InvU6, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U6")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[a[p_1]] = t.sigma[x[p_1]]
@@ -1245,7 +1244,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1258,14 +1257,14 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>19. InvU7'
       <3> USE DEF InvU7, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U7")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[v[p_1]] = t.sigma[y[p_1]]
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1278,7 +1277,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>20. InvU8'
       <3> USE DEF InvU8, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U8")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[v[p_1]] = t.sigma[y[p_1]]
@@ -1286,7 +1285,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1299,7 +1298,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>21. InvU9'
       <3> USE DEF InvU9, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U9")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[v[p_1]] = t.sigma[y[p_1]]
@@ -1308,7 +1307,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1321,7 +1320,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>22. InvU10'
       <3> USE DEF InvU10, TypeOK, Validpc
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U10")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]]
                            /\ t.sigma[v[p_1]] = t.sigma[y[p_1]]
@@ -1330,7 +1329,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                            /\ t.f[p_1] = NIL)'
         OBVIOUS
       <3>1. CASE Par[u[p]] = u[p]
-        <4>1. \E told \in P : /\ told.f[p] = NIL
+        <4>1. \E told \in M : /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           BY <3>1
@@ -1342,7 +1341,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY <3>1, <3>2
     <2>23. InvU11'
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U11")'
                    PROVE  (t.f[p_1] = ACK)'
         BY DEF InvU11
@@ -1353,7 +1352,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>1
         <4>1. u'[p] = Max(t.sigma[u'[p]])
           BY Isa, RootIsMax
-        <4>2. PICK told \in P: /\ told.f[p] = NIL 
+        <4>2. PICK told \in M: /\ told.f[p] = NIL 
                                /\ t.sigma = told.sigma 
                                /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
           OBVIOUS
@@ -1367,7 +1366,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE NisNat DEF Linearizable, InvF2, TypeOK, ValidPar, Validx, 
                          Validy, Validu, Validv, Validpc, ValidP, AtomConfigs, 
                          Rets, InvocationLines, States, NodeSet, PowerSetNodes
-      <3>1. PICK told \in P: TRUE
+      <3>1. PICK told \in M: TRUE
         BY Linearizable
       <3>2. told.f[p] = NIL
         BY <3>1
@@ -1387,15 +1386,15 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY <3>3, <3>4, <3>5, <3>6, <3>7, <3>8, MaxIntegers DEF SigmaIsPartition1
       <3>10. Max(told.sigma[x[p]]) \in 1..N
         BY <3>9 DEF ValidP
-      <3>11. [sigma |-> told.sigma, f |-> told.f] \in P
+      <3>11. [sigma |-> told.sigma, f |-> told.f] \in M
         BY <3>2
       <3>12 CASE Par[u[p]] = u[p]
-        <4>1. [sigma |-> told.sigma, f |-> [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]] \in P'
+        <4>1. [sigma |-> told.sigma, f |-> [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]] \in M'
           BY Zenon, <3>1, <3>12, <3>2, <3>10, <3>11
         <4> QED
           BY <4>1
       <3>13 CASE Par[u[p]] # u[p]
-        <4>1. P' = P 
+        <4>1. M' = M 
           BY <3>13
         <4> QED
           BY <4>1           
@@ -1488,7 +1487,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>5. SigmaIsCoarse'
       <3> USE DEF SigmaIsCoarse
       <3> SUFFICES ASSUME NEW w \in NodeSet, NEW z \in NodeSet,
-                          NEW t \in P,
+                          NEW t \in M,
                           Par'[w] = z,
                           Par[u[p]] = a[p],
                           Par' = [Par EXCEPT ![u[p]] = b[p]]
@@ -1503,7 +1502,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>6. SigmaIsFine'
       <3> USE DEF SigmaIsFine
       <3> SUFFICES ASSUME NEW w \in NodeSet, NEW z \in NodeSet,
-                          NEW t \in P,
+                          NEW t \in M,
                           (w # z /\ Par'[w] = w /\ Par'[z] = z),
                           Par[u[p]] = a[p],
                           Par' = [Par EXCEPT ![u[p]] = b[p]]
@@ -1628,11 +1627,11 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>4. SigmaIsPartition2'
       <3> USE DEF SigmaIsPartition2
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (w \in t.sigma[z])'
                    PROVE  (t.sigma[w] = t.sigma[z])'
         BY DEF SigmaIsPartition2
-      <3>1. PICK told \in P: /\ told.f[p] = u[p]
+      <3>1. PICK told \in M: /\ told.f[p] = u[p]
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = NIL]
         BY Zenon
@@ -1641,11 +1640,11 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>5. SigmaIsCoarse'
       <3> USE DEF SigmaIsCoarse
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (Par[w] = z)'
                    PROVE  (t.sigma[w] = t.sigma[z])'
         BY DEF SigmaIsCoarse
-      <3>1. PICK told \in P: /\ told.f[p] = u[p]
+      <3>1. PICK told \in M: /\ told.f[p] = u[p]
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = NIL]
         BY Zenon
@@ -1654,11 +1653,11 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>6. SigmaIsFine'
       <3> USE DEF SigmaIsFine
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (w # z /\ Par[w] = w /\ Par[z] = z)'
                    PROVE  (t.sigma[w] # t.sigma[z])'
          BY DEF SigmaIsFine
-      <3>1. PICK told \in P: /\ told.f[p] = u[p]
+      <3>1. PICK told \in M: /\ told.f[p] = u[p]
                              /\ t.sigma = told.sigma
                              /\ t.f = [told.f EXCEPT ![p] = NIL]
         BY Zenon
@@ -1704,9 +1703,9 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       BY DEF InvUEx, TypeOK, ValidP, AtomConfigs, Rets, InvocationLines
     <2>26. Linearizable'
       <3> USE DEF Linearizable, InvF6, TypeOK, ValidP, AtomConfigs, Rets, InvocationLines
-      <3>1. PICK told \in P : told.f[p] = u[p]
+      <3>1. PICK told \in M : told.f[p] = u[p]
         OBVIOUS
-      <3>3. [sigma |-> told.sigma, f |-> [told.f EXCEPT ![p] = NIL]] \in P'
+      <3>3. [sigma |-> told.sigma, f |-> [told.f EXCEPT ![p] = NIL]] \in M'
         BY <3>1
       <3> QED
         BY Zenon, <3>3
@@ -1787,11 +1786,11 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                          Validu, Validv, AtomConfigs, Rets, InvocationLines, 
                          States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW z \in NodeSet,
-                          NEW t \in P'
+                          NEW t \in M'
                    PROVE  z \in t.sigma[z]
         BY DEF SigmaIsPartition1
       <3>1. CASE u[p] = v[p]
-        <4>1 PICK told \in P: /\ told.f[p] = NIL
+        <4>1 PICK told \in M: /\ told.f[p] = NIL
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = ACK]
           BY <3>1
@@ -1801,7 +1800,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P: /\ told.f[p] = NIL
+          <5>1. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -1822,13 +1821,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE NisNat DEF SigmaIsPartition2, TypeOK, ValidPar, Validx, Validy, Validu, Validv, 
                          AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (w \in t.sigma[z])'
                    PROVE  (t.sigma[w] = t.sigma[z])'
         BY DEF SigmaIsPartition2
       <3>1. CASE u[p] = v[p]
          <4> USE <3>1
-         <4>1. PICK told \in P: /\ told.f[p] = NIL
+         <4>1. PICK told \in M: /\ told.f[p] = NIL
                                 /\ t.sigma = told.sigma
                                 /\ t.f = [told.f EXCEPT ![p] = ACK]
              OBVIOUS
@@ -1838,7 +1837,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P: /\ told.f[p] = NIL
+          <5>1. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -1915,13 +1914,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                          States, NodeSet, PowerSetNodes,
                          InvU2
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (Par[w] = z)'
                    PROVE  (t.sigma[w] = t.sigma[z])'
         BY DEF SigmaIsCoarse
       <3>1. CASE u[p] = v[p]
          <4> USE <3>1
-         <4>1. PICK told \in P: /\ told.f[p] = NIL
+         <4>1. PICK told \in M: /\ told.f[p] = NIL
                                 /\ t.sigma = told.sigma
                                 /\ t.f = [told.f EXCEPT ![p] = ACK]
              OBVIOUS
@@ -1931,7 +1930,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p])
           <5> USE <4>1
-          <5>A. PICK told \in P: /\ told.f[p] = NIL
+          <5>A. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2007,7 +2006,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
             BY <5>1, <5>2
         <4>2. CASE (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>2
-          <5>A. PICK told \in P: /\ told.f[p] = NIL
+          <5>A. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2094,13 +2093,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                          Validx, Validy, Validu, Validv, AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes,
                          InvU2
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (w # z /\ Par[w] = w /\ Par[z] = z)'
                    PROVE  (t.sigma[w] # t.sigma[z])'
         BY DEF SigmaIsFine
       <3>1. CASE u[p] = v[p]
          <4> USE <3>1
-         <4>1. PICK told \in P: /\ told.f[p] = NIL
+         <4>1. PICK told \in M: /\ told.f[p] = NIL
                                 /\ t.sigma = told.sigma
                                 /\ t.f = [told.f EXCEPT ![p] = ACK]
              OBVIOUS
@@ -2110,7 +2109,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1, <2>1, <2>2, <2>3, <2>4, <2>5
-          <5>A. PICK told \in P: /\ told.f[p] = NIL
+          <5>A. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2264,13 +2263,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE DEF InvF1, TypeOK, ValidPar, Validx, Validy, Validu, Validv, 
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F1")'
                    PROVE  (t.f[p_1] = NIL)'
         BY DEF InvF1
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2298,7 +2297,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P: /\ told.f[p] = NIL
+          <5>1. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2327,14 +2326,14 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE DEF InvF2, InvF4, InvF5, TypeOK, ValidPar, Validx, Validy, Validu, Validv, 
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F2")'
                    PROVE  (/\ t.sigma[u[p_1]] = t.sigma[x[p_1]] 
                            /\ t.f[p_1] = NIL)'
         BY DEF InvF2
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P : /\ told.f[p] = NIL
+        <4>1. PICK told \in M : /\ told.f[p] = NIL
                                 /\ t.sigma = told.sigma
                                 /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2366,7 +2365,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P: /\ told.f[p] = NIL
+          <5>1. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2423,7 +2422,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "F3"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]] 
                           /\ t.sigma[a[q]] = t.sigma[x[q]]
@@ -2431,7 +2430,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvF3
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2441,7 +2440,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z \in NodeSet: 
                                      (z \in told.sigma[x[p]] \cup told.sigma[y[p]])
                                         => (t.sigma[z] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2487,7 +2486,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida, Validb,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "F4"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]] 
                           /\ t.sigma[a[q]] = t.sigma[x[q]]
@@ -2496,7 +2495,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvF4
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2506,7 +2505,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z \in NodeSet: 
                                      (z \in told.sigma[x[p]] \cup told.sigma[y[p]])
                                         => (t.sigma[z] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2562,7 +2561,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida, Validb,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "F5"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]] 
                           /\ t.sigma[a[q]] = t.sigma[x[q]]
@@ -2571,7 +2570,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvF5
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2581,7 +2580,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z \in NodeSet: 
                                      (z \in told.sigma[x[p]] \cup told.sigma[y[p]])
                                         => (t.sigma[z] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2636,13 +2635,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE DEF InvF6, TypeOK, ValidPar, Validx, Validy, Validu, Validv, 
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "F6")'
                    PROVE  (t.f[p_1] = u[p_1])'
         BY DEF InvU1
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2670,7 +2669,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P: /\ told.f[p] = NIL
+          <5>1. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2699,13 +2698,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE DEF InvU1, TypeOK, ValidPar, Validx, Validy, Validu, Validv, 
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U1")'
                    PROVE  (t.f[p_1] = NIL)'
         BY DEF InvU1
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2733,7 +2732,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P: /\ told.f[p] = NIL
+          <5>1. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2763,7 +2762,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
                           q # p,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U2"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[v[q]] = t.sigma[y[q]]
@@ -2771,7 +2770,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU2
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2781,7 +2780,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2852,7 +2851,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE DEF InvU3, TypeOK, ValidPar, Validx, Validy, Validu, Validv, Validpc,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U3"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[v[q]] = t.sigma[y[q]]
@@ -2860,7 +2859,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU2, InvU3
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2870,7 +2869,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -2942,7 +2941,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U4"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[a[q]] = t.sigma[x[q]]
@@ -2951,7 +2950,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU4
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -2961,7 +2960,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -3075,7 +3074,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida, Validb,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U5"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[a[q]] = t.sigma[x[q]]
@@ -3085,7 +3084,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU5
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -3095,7 +3094,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -3245,7 +3244,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida, Validb,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U6"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[a[q]] = t.sigma[x[q]]
@@ -3255,7 +3254,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU6
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -3265,7 +3264,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -3414,7 +3413,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE DEF InvU7, TypeOK, ValidPar, Validx, Validy, Validu, Validv, Validpc,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U7"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[v[q]] = t.sigma[y[q]]
@@ -3422,7 +3421,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU7
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -3432,7 +3431,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -3504,7 +3503,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U8"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[a[q]] = t.sigma[y[q]]
@@ -3513,7 +3512,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU8
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -3523,7 +3522,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -3637,7 +3636,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida, Validb,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U9"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[a[q]] = t.sigma[y[q]]
@@ -3647,7 +3646,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU9
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -3657,7 +3656,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -3799,7 +3798,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                   Valida, Validb,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW q \in PROCSET,
-                          NEW t \in P',
+                          NEW t \in M',
                           pc[q] = "U10"
                    PROVE  /\ t.sigma[u[q]] = t.sigma[x[q]]
                           /\ t.sigma[a[q]] = t.sigma[y[q]]
@@ -3809,7 +3808,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY DEF InvU10
       <3>1. CASE u[p] = v[p]
         <4> USE <3>1
-        <4>1. PICK told \in P: /\ told.f[p] = NIL
+        <4>1. PICK told \in M: /\ told.f[p] = NIL
                                /\ t.sigma = told.sigma
                                /\ t.f = [told.f EXCEPT ![p] = ACK]
           OBVIOUS
@@ -3819,7 +3818,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P : /\ told.f[p] = NIL
+          <5>1. PICK told \in M : /\ told.f[p] = NIL
                                   /\ \A z_1 \in NodeSet: 
                                      (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                      (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -3960,13 +3959,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       <3> USE DEF InvU11, TypeOK, ValidPar, Validx, Validy, Validu, Validv, Validpc,
                   AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
       <3> SUFFICES ASSUME NEW p_1 \in PROCSET',
-                          NEW t \in P',
+                          NEW t \in M',
                           (pc[p_1] = "U11")'
                    PROVE  (t.f[p_1] = ACK)'
         BY DEF InvU5
       <3>1. CASE u[p] = v[p]
          <4> USE <3>1
-         <4>1. PICK told \in P: /\ told.f[p] = NIL
+         <4>1. PICK told \in M: /\ told.f[p] = NIL
                                 /\ t.sigma = told.sigma
                                 /\ t.f = [told.f EXCEPT ![p] = ACK]
              OBVIOUS
@@ -3996,7 +3995,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         <4> USE <3>2
         <4>1. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
           <5> USE <4>1
-          <5>1. PICK told \in P: /\ told.f[p] = NIL
+          <5>1. PICK told \in M: /\ told.f[p] = NIL
                                  /\ \A z_1 \in NodeSet: 
                                     (z_1 \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                     (t.sigma[z_1] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -4019,7 +4018,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
         BY <3>1, <3>2   
     <2>24. Linearizable'
       <3> USE DEF Linearizable, InvU2, TypeOK, ValidPar, Validx, Validy, Validu, Validv, Validpc, ValidP, AtomConfigs, Rets, InvocationLines, States, NodeSet, PowerSetNodes
-      <3>d. PICK told \in P: TRUE
+      <3>d. PICK told \in M: TRUE
         OBVIOUS
       <3> USE <3>d
       <3>1. CASE u[p] = v[p]
@@ -4035,7 +4034,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
           BY <4>2
         <4>5. t \in AtomConfigs
           OBVIOUS
-        <4>6 t \in P'
+        <4>6 t \in M'
           BY <3>d, <4>2, <4>4, <4>5
         <4> QED
           BY <4>6
@@ -4051,13 +4050,13 @@ LEMMA NextI == I /\ [Next]_allvars => I'
                                                      THEN told.sigma[x[p]] \cup told.sigma[y[p]]
                                                      ELSE told.sigma[z]]
           <5>4. DEFINE tf   == [told.f EXCEPT ![p] = ACK]
-          <5>5. [sigma |-> tsig, f |-> tf] \in P'
+          <5>5. [sigma |-> tsig, f |-> tf] \in M'
             BY <5>1, <5>2                                        
           <5> QED
             BY <5>5
         <4>2. CASE ~((u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p]))
           <5> USE <4>2
-          <5>1. told \in P
+          <5>1. told \in M
             OBVIOUS
           <5> QED
             BY <5>1
@@ -4213,7 +4212,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>5. SigmaIsCoarse'
       <3> USE DEF SigmaIsCoarse
       <3> SUFFICES ASSUME NEW w \in NodeSet, NEW z \in NodeSet,
-                          NEW t \in P,
+                          NEW t \in M,
                           Par'[w] = z,
                           Par[u[p]] = a[p],
                           Par' = [Par EXCEPT ![u[p]] = b[p]]
@@ -4228,7 +4227,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>6. SigmaIsFine'
       <3> USE DEF SigmaIsFine
       <3> SUFFICES ASSUME NEW w \in NodeSet, NEW z \in NodeSet,
-                          NEW t \in P,
+                          NEW t \in M,
                           (w # z /\ Par'[w] = w /\ Par'[z] = z),
                           Par[u[p]] = a[p],
                           Par' = [Par EXCEPT ![u[p]] = b[p]]
@@ -4479,7 +4478,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>5. SigmaIsCoarse'
       <3> USE DEF SigmaIsCoarse
       <3> SUFFICES ASSUME NEW w \in NodeSet, NEW z \in NodeSet,
-                          NEW t \in P,
+                          NEW t \in M,
                           Par'[w] = z,
                           Par[v[p]] = a[p],
                           Par' = [Par EXCEPT ![v[p]] = b[p]]
@@ -4494,7 +4493,7 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>6. SigmaIsFine'
       <3> USE DEF SigmaIsFine
       <3> SUFFICES ASSUME NEW w \in NodeSet, NEW z \in NodeSet,
-                          NEW t \in P,
+                          NEW t \in M,
                           (w # z /\ Par'[w] = w /\ Par'[z] = z),
                           Par[v[p]] = a[p],
                           Par' = [Par EXCEPT ![v[p]] = b[p]]
@@ -4619,11 +4618,11 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>4. SigmaIsPartition2'
       <3> USE DEF SigmaIsPartition2
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (w \in t.sigma[z])'
                    PROVE  (t.sigma[w] = t.sigma[z])'
          BY DEF SigmaIsPartition2
-       <3>1. PICK told \in P: /\ told.f[p] = ACK
+       <3>1. PICK told \in M: /\ told.f[p] = ACK
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = NIL]
          BY Zenon
@@ -4632,11 +4631,11 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>5. SigmaIsCoarse'
       <3> USE DEF SigmaIsCoarse
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (Par[w] = z)'
                    PROVE  (t.sigma[w] = t.sigma[z])'
          BY DEF SigmaIsCoarse
-       <3>1. PICK told \in P: /\ told.f[p] = ACK
+       <3>1. PICK told \in M: /\ told.f[p] = ACK
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = NIL]
          BY Zenon
@@ -4645,11 +4644,11 @@ LEMMA NextI == I /\ [Next]_allvars => I'
     <2>6. SigmaIsFine'
       <3> USE DEF SigmaIsFine
       <3> SUFFICES ASSUME NEW w \in NodeSet', NEW z \in NodeSet',
-                          NEW t \in P',
+                          NEW t \in M',
                           (w # z /\ Par[w] = w /\ Par[z] = z)'
                    PROVE  (t.sigma[w] # t.sigma[z])'
          BY DEF SigmaIsFine
-       <3>1. PICK told \in P: /\ told.f[p] = ACK
+       <3>1. PICK told \in M: /\ told.f[p] = ACK
                               /\ t.sigma = told.sigma
                               /\ t.f = [told.f EXCEPT ![p] = NIL]
          BY Zenon
@@ -4695,9 +4694,9 @@ LEMMA NextI == I /\ [Next]_allvars => I'
       BY DEF InvUEx, TypeOK, ValidP, AtomConfigs, Rets, InvocationLines
     <2>26. Linearizable'
       <3> USE DEF Linearizable, InvU11, TypeOK, ValidP, AtomConfigs, Rets, InvocationLines
-      <3>1. PICK told \in P : told.f[p] = ACK
+      <3>1. PICK told \in M : told.f[p] = ACK
         OBVIOUS
-      <3>3. [sigma |-> told.sigma, f |-> [told.f EXCEPT ![p] = NIL]] \in P'
+      <3>3. [sigma |-> told.sigma, f |-> [told.f EXCEPT ![p] = NIL]] \in M'
         BY <3>1
       <3> QED
         BY Zenon, <3>3
@@ -4728,11 +4727,11 @@ THEOREM Linearizability == Spec => [](M # {})
   
 
 (* Strong Linearizability *)
-UniquePossibility == \A s, t \in P : s = t
+UniquePossibility == \A s, t \in M : s = t
 
 LEMMA InitUniquePossibility == Init => UniquePossibility
   <1> SUFFICES ASSUME Init,
-                      NEW s \in P, NEW t \in P
+                      NEW s \in M, NEW t \in M
                PROVE  s = t
     BY DEF UniquePossibility
   <1> USE DEF Init, InitAug, UniquePossibility
@@ -4757,20 +4756,20 @@ LEMMA NextUniquePossibility == UniquePossibility /\ [Next]_allvars => UniquePoss
   <1>2. ASSUME NEW p \in PROCSET,
                ExecF2(p)
         PROVE  UniquePossibility'
-    <2> SUFFICES ASSUME NEW s \in P', NEW t \in P'
+    <2> SUFFICES ASSUME NEW s \in M', NEW t \in M'
                  PROVE  (s = t)'
       BY DEF UniquePossibility
     <2> USE <1>2, NextI DEF UniquePossibility, ExecF2, AugF2, TypeOK, 
                             ValidP, AtomConfigs, States, Rets, PowerSetNodes
     <2>1. CASE Par[u[p]] = u[p]
       <3> USE <2>1
-      <3>1. PICK sold \in P: /\ sold.f[p] = NIL 
+      <3>1. PICK sold \in M: /\ sold.f[p] = NIL 
                              /\ s.sigma = sold.sigma 
                              /\ s.f = [sold.f EXCEPT ![p] = Max(sold.sigma[x[p]])]
         OBVIOUS
       <3>2. s = [sigma |-> sold.sigma, f |-> [sold.f EXCEPT ![p] = Max(sold.sigma[x[p]])]]
         BY <3>1
-      <3>3. PICK told \in P: /\ told.f[p] = NIL 
+      <3>3. PICK told \in M: /\ told.f[p] = NIL 
                              /\ t.sigma = told.sigma 
                              /\ t.f = [told.f EXCEPT ![p] = Max(told.sigma[x[p]])]
         OBVIOUS
@@ -4801,16 +4800,16 @@ LEMMA NextUniquePossibility == UniquePossibility /\ [Next]_allvars => UniquePoss
   <1>6. ASSUME NEW p \in PROCSET,
                ExecF6(p)
         PROVE  UniquePossibility'
-    <2> SUFFICES ASSUME NEW s \in P', NEW t \in P'
+    <2> SUFFICES ASSUME NEW s \in M', NEW t \in M'
                  PROVE  (s = t)'
       BY DEF UniquePossibility
     <2> USE <1>6, NextI DEF UniquePossibility, ExecF6, AugF6, 
                             TypeOK, ValidP, AtomConfigs, States, Rets, PowerSetNodes
-    <2>1. PICK sold \in P: /\ sold.f[p] = u[p]
+    <2>1. PICK sold \in M: /\ sold.f[p] = u[p]
                            /\ s.sigma = sold.sigma
                            /\ s.f = [sold.f EXCEPT ![p] = NIL]
       OBVIOUS
-    <2>2. PICK told \in P: /\ told.f[p] = u[p]
+    <2>2. PICK told \in M: /\ told.f[p] = u[p]
                            /\ t.sigma = told.sigma
                            /\ t.f = [told.f EXCEPT ![p] = NIL]
       OBVIOUS
@@ -4829,16 +4828,16 @@ LEMMA NextUniquePossibility == UniquePossibility /\ [Next]_allvars => UniquePoss
         PROVE  UniquePossibility'
     <2> USE <1>8, NextI DEF UniquePossibility, ExecU2, AugU2, TypeOK, 
                             ValidP, AtomConfigs, States, Rets, PowerSetNodes
-    <2> SUFFICES ASSUME NEW s \in P', NEW t \in P'
+    <2> SUFFICES ASSUME NEW s \in M', NEW t \in M'
                  PROVE  (s = t)'
       BY DEF UniquePossibility
     <2>1. CASE u[p] = v[p]
       <3> USE <2>1
-      <3>1. PICK sold \in P: /\ sold.f[p] = NIL
+      <3>1. PICK sold \in M: /\ sold.f[p] = NIL
                              /\ s.sigma = sold.sigma
                              /\ s.f = [sold.f EXCEPT ![p] = ACK]
         OBVIOUS
-      <3>2. PICK told \in P: /\ told.f[p] = NIL
+      <3>2. PICK told \in M: /\ told.f[p] = NIL
                              /\ t.sigma = told.sigma
                              /\ t.f = [told.f EXCEPT ![p] = ACK]
         OBVIOUS
@@ -4848,7 +4847,7 @@ LEMMA NextUniquePossibility == UniquePossibility /\ [Next]_allvars => UniquePoss
         BY <3>1, <3>2, <3>3
     <2>2. CASE (u[p] < v[p] /\ Par[u[p]] = u[p]) \/ (u[p] > v[p] /\ Par[v[p]] = v[p])
       <3> USE <2>2
-      <3>1. PICK sold \in P: /\ sold.f[p] = NIL
+      <3>1. PICK sold \in M: /\ sold.f[p] = NIL
                              /\ \A z \in NodeSet: 
                                 (z \in sold.sigma[x[p]] \cup sold.sigma[y[p]]) => 
                                 (s.sigma[z] = sold.sigma[x[p]] \cup sold.sigma[y[p]]) 
@@ -4857,7 +4856,7 @@ LEMMA NextUniquePossibility == UniquePossibility /\ [Next]_allvars => UniquePoss
                                 (s.sigma[z] = sold.sigma[z])
                              /\ s.f = [sold.f EXCEPT ![p] = ACK]
         OBVIOUS
-      <3>2. PICK told \in P: /\ told.f[p] = NIL
+      <3>2. PICK told \in M: /\ told.f[p] = NIL
                              /\ \A z \in NodeSet: 
                                 (z \in told.sigma[x[p]] \cup told.sigma[y[p]]) => 
                                 (t.sigma[z] = told.sigma[x[p]] \cup told.sigma[y[p]]) 
@@ -4921,14 +4920,14 @@ LEMMA NextUniquePossibility == UniquePossibility /\ [Next]_allvars => UniquePoss
          PROVE  UniquePossibility'
     <2> USE <1>17, NextI DEF UniquePossibility, ExecU11, AugU11, 
                    TypeOK, ValidP, AtomConfigs, States, Rets, PowerSetNodes
-    <2> SUFFICES ASSUME NEW s \in P', NEW t \in P'
+    <2> SUFFICES ASSUME NEW s \in M', NEW t \in M'
                  PROVE  (s = t)'
       BY DEF UniquePossibility
-    <2>1. PICK sold \in P: /\ sold.f[p] = ACK
+    <2>1. PICK sold \in M: /\ sold.f[p] = ACK
                            /\ s.sigma = sold.sigma
                            /\ s.f = [sold.f EXCEPT ![p] = NIL]
       OBVIOUS                       
-    <2>2. PICK told \in P: /\ told.f[p] = ACK
+    <2>2. PICK told \in M: /\ told.f[p] = ACK
                            /\ t.sigma = told.sigma
                            /\ t.f = [told.f EXCEPT ![p] = NIL]
       OBVIOUS                       
@@ -4947,13 +4946,13 @@ LEMMA AlwaysUniquePossibility == Spec => []UniquePossibility
 
 LEMMA Cardinality1 == ASSUME Linearizable,
                              UniquePossibility
-                      PROVE  Cardinality(P) = 1
+                      PROVE  Cardinality(M) = 1
 <1> USE DEF Linearizable, UniquePossibility, Cardinality
-<1>1. PICK t \in P: TRUE
+<1>1. PICK t \in M: TRUE
   OBVIOUS
-<1>2. P = {t}
+<1>2. M = {t}
   BY <1>1
-<1>3. Cardinality(P) = 1
+<1>3. Cardinality(M) = 1
   BY <1>2, FS_Singleton
 <1> QED
   BY <1>3
