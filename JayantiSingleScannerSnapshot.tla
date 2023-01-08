@@ -2,12 +2,12 @@
 
 EXTENDS Integers, TLC, FiniteSets, TLAPS
 
-CONSTANTS ACK, BOT, N, M
-VARIABLES pc, X, A, B, a, i, v, j, T
-vars == <<pc, X, A, B, a, i, v, j, T>>
+CONSTANTS ACK, BOT, N, N_COMPS
+VARIABLES pc, X, A, B, a, i, v, j, M
+vars == <<pc, X, A, B, a, i, v, j, M>>
 
 \* A few useful definitions
-IndexSet == 0..(M-1)
+IndexSet == 0..(N_COMPS-1)
 WProcSet == 1..N
 S        == N+1      \* N+1 is the scanner.
 AllProcs == 1..S
@@ -19,7 +19,7 @@ ASSUME AckBotDef == /\ ACK \notin Nat
                     /\ BOT \notin [IndexSet -> Nat]
                     
 ASSUME PDef ==  /\ N \in Nat \ {0}
-                /\ M \in Nat \ {0}
+                /\ N_COMPS \in Nat \ {0}
 
 \* Defining the domain of tuples
 tTypeOK(t) == /\ \A p \in WProcSet : /\ pc[p] \in 0..1 => t.res[p] = BOT
@@ -44,8 +44,8 @@ TypeOK == /\ pc \in [AllProcs -> 0..10]
           /\ A \in [IndexSet -> Nat]
           /\ B \in [IndexSet -> Nat \union {BOT}]
           /\ a \in [IndexSet -> Nat]
-          /\ j \in 0..M
-          /\ T \in SUBSET CorrectTupleDomain
+          /\ j \in 0..N_COMPS
+          /\ M \in SUBSET CorrectTupleDomain
              
 \* Delta, set of possible return values for the kth component
 D(k) == CASE pc[S] = 5  -> {A[k]}
@@ -71,8 +71,8 @@ Init == /\ pc = Merge([p \in WProcSet |-> 0], Map(S, 5))
         /\ a \in [IndexSet -> Nat]
         /\ i \in [WProcSet -> IndexSet]
         /\ v \in [WProcSet -> Nat]
-        /\ j \in 0..M
-        /\ T = {[state |-> A, res |-> [p \in AllProcs |-> BOT]]}
+        /\ j \in 0..N_COMPS
+        /\ M = {[state |-> A, res |-> [p \in AllProcs |-> BOT]]}
         
 
 
@@ -88,12 +88,12 @@ L00(p) == /\ pc[p] = 0
                                  /\ i' = [i EXCEPT ![p] = k]
           /\ \E w \in Nat : v' = [v EXCEPT ![p] = w]
           /\ pc' = [pc EXCEPT ![p] = 1]
-          /\ UNCHANGED <<X, A, B, a, j, T>>
+          /\ UNCHANGED <<X, A, B, a, j, M>>
 
 L01(p) == /\ pc[p] = 1
           /\ A' = [A EXCEPT ![i[p]] = v[p]]
-          /\ T' = T \union {[state |-> [t.state EXCEPT ![i[p]] = v[p]], 
-                             res   |-> [t.res   EXCEPT ![p]    = ACK]]: t \in T}
+          /\ M' = M \union {[state |-> [t.state EXCEPT ![i[p]] = v[p]], 
+                             res   |-> [t.res   EXCEPT ![p]    = ACK]]: t \in M}
           /\ pc' = [pc EXCEPT ![p] = 2]
           /\ UNCHANGED <<X, B, a, i, v, j>>
     
@@ -101,26 +101,26 @@ L02(p) == /\ pc[p] = 2
           /\ IF X = TRUE
                 THEN pc' = [pc EXCEPT ![p] = 3]
                 ELSE pc' = [pc EXCEPT ![p] = 4]
-          /\ UNCHANGED <<X, A, B, a, i, v, j, T>>
+          /\ UNCHANGED <<X, A, B, a, i, v, j, M>>
           
 L03(p) == /\ pc[p] = 3
           /\ B' = [B EXCEPT ![i[p]] = v[p]]
           /\ pc' = [pc EXCEPT ![p] = 4]
-          /\ UNCHANGED <<X, A, a, i, v, j, T>>
+          /\ UNCHANGED <<X, A, a, i, v, j, M>>
           
 L04(p) == /\ pc[p] = 4
-          /\ T' = {[state |-> t.state,
-                    res   |-> [t.res EXCEPT ![p] = BOT]] : t \in {u \in T : u.res[p] = ACK}}
+          /\ M' = {[state |-> t.state,
+                    res   |-> [t.res EXCEPT ![p] = BOT]] : t \in {u \in M : u.res[p] = ACK}}
           /\ pc' = [pc EXCEPT ![p] = 0]
           /\ UNCHANGED <<X, A, B, a, i, v, j>>
           
 \* Scan()
 \* ------
 \* 5.  X <- true
-\* 6.  for j <- 0..M-1: B[j] <- BOT
-\* 7.  for j <- 0..M-1: a[j] <- A[j]
+\* 6.  for j <- 0..N_COMPS-1: B[j] <- BOT
+\* 7.  for j <- 0..N_COMPS-1: a[j] <- A[j]
 \* 8.  X <- false
-\* 9.  for j <- 0..M-1:
+\* 9.  for j <- 0..N_COMPS-1:
 \*         if B[j] != BOT:
 \*            a[j] <- B[j]
 \* 10. return ack
@@ -129,38 +129,38 @@ L05    == /\ pc[S] = 5
           /\ X' = TRUE
           /\ pc' = [pc EXCEPT ![S] = 6]
           /\ j' = 0
-          /\ UNCHANGED <<A, B, a, i, v, T>>
+          /\ UNCHANGED <<A, B, a, i, v, M>>
           
 L06    == /\ pc[S] = 6
-          /\ IF j < M
+          /\ IF j < N_COMPS
                 THEN /\ pc' = pc
                      /\ j' = j + 1
                      /\ B' = [B EXCEPT ![j] = BOT]
                 ELSE /\ pc' = [pc EXCEPT ![S] = 7]
                      /\ j' = 0
                      /\ B' = B
-          /\ UNCHANGED <<X, A, a, i, v, T>>
+          /\ UNCHANGED <<X, A, a, i, v, M>>
           
 L07    == /\ pc[S] = 7
-          /\ IF j < M
+          /\ IF j < N_COMPS
                 THEN /\ pc' = pc
                      /\ j' = j + 1
                      /\ a' = [a EXCEPT ![j] = A[j]]
                 ELSE /\ pc' = [pc EXCEPT ![S] = 8]
                      /\ j' = j
                      /\ a' = a
-          /\ UNCHANGED <<X, A, B, i, v, T>>
+          /\ UNCHANGED <<X, A, B, i, v, M>>
           
 L08    == /\ pc[S] = 8
           /\ X' = FALSE
           /\ pc' = [pc EXCEPT ![S] = 9]
           /\ j' = 0
-          /\ T' = {[state |-> A,
-                    res   |-> Merge([p \in WProcSet |-> IF pc[p] \in {0, 1} THEN BOT ELSE ACK], Map(S, t.state))]: t \in T}
+          /\ M' = {[state |-> A,
+                    res   |-> Merge([p \in WProcSet |-> IF pc[p] \in {0, 1} THEN BOT ELSE ACK], Map(S, t.state))]: t \in M}
           /\ UNCHANGED <<A, B, a, i, v>>
           
 L09   == /\ pc[S] = 9
-         /\ IF j < M
+         /\ IF j < N_COMPS
                THEN /\ pc' = pc
                     /\ j' = j + 1
                     /\ IF B[j] /= BOT
@@ -169,11 +169,11 @@ L09   == /\ pc[S] = 9
                ELSE /\ pc' = [pc EXCEPT ![S] = 10]
                     /\ j' = j
                     /\ a' = a
-         /\ UNCHANGED <<X, A, B, i, v, T>>
+         /\ UNCHANGED <<X, A, B, i, v, M>>
          
 L10   == /\ pc[S] = 10
-         /\ T' = {[state |-> t.state,
-                   res   |-> [t.res EXCEPT ![S] = BOT]] : t \in {u \in T : u.res[S] = a}}
+         /\ M' = {[state |-> t.state,
+                   res   |-> [t.res EXCEPT ![S] = BOT]] : t \in {u \in M : u.res[S] = a}}
          /\ pc' = [pc EXCEPT ![S] = 5]
          /\ UNCHANGED <<X, A, B, a, i, v, j>>
 
@@ -192,22 +192,22 @@ Next  == \/ \E p \in WProcSet : \/ L00(p)
 Spec  == /\ Init
          /\ [][Next]_vars
 
-InvNL == T /= {}
+InvNL == M /= {}
 
 InvC == \A p, q \in WProcSet: (pc[p] \in 1..4 /\ pc[q] \in 1..4 /\ i[p] = i[q]) => p = q 
 
-Inv00 == \A p \in WProcSet : pc[p] = 0 => \A t \in T : t.res[p] = BOT
+Inv00 == \A p \in WProcSet : pc[p] = 0 => \A t \in M : t.res[p] = BOT
 
-Inv01 == \A p \in WProcSet : pc[p] = 1 => \A t \in T : t.state[i[p]] = A[i[p]] /\ t.res[p] = BOT
+Inv01 == \A p \in WProcSet : pc[p] = 1 => \A t \in M : t.state[i[p]] = A[i[p]] /\ t.res[p] = BOT
 
-Inv_W1 == \A p \in WProcSet : pc[p] \in 2..4 => \A t \in T : t.state[i[p]] /= A[i[p]] => t.res[p] = BOT
+Inv_W1 == \A p \in WProcSet : pc[p] \in 2..4 => \A t \in M : t.state[i[p]] /= A[i[p]] => t.res[p] = BOT
 
-Inv_W2 == \A p \in WProcSet : pc[p] \in 2..4 => \A t \in T : \E u \in T : /\ u.state = [t.state EXCEPT ![i[p]] = A[i[p]]]
+Inv_W2 == \A p \in WProcSet : pc[p] \in 2..4 => \A t \in M : \E u \in M : /\ u.state = [t.state EXCEPT ![i[p]] = A[i[p]]]
                                                                           /\ u.res = [t.res EXCEPT ![p] = ACK]
 
 Inv_W3 == \A p \in WProcSet : pc[p] \in 2..4 => A[i[p]] = v[p]
 
-Inv_W4 == \A k \in IndexSet : (\A p \in WProcSet : pc[p] = 0 \/ i[p] /= k) => \A t \in T : t.state[k] = A[k]
+Inv_W4 == \A k \in IndexSet : (\A p \in WProcSet : pc[p] = 0 \/ i[p] /= k) => \A t \in M : t.state[k] = A[k]
 
 InvW == /\ Inv_W3
         /\ Inv_W2
@@ -217,12 +217,12 @@ InvW == /\ Inv_W3
 
 AlphaDomain == {f \in [IndexSet -> UNION {D(k) : k \in IndexSet}] : (\A k \in IndexSet : f[k] \in D(k))}
 
-Inv05 == pc[S] = 5 => \A t \in T : t.res[S] = BOT
+Inv05 == pc[S] = 5 => \A t \in M : t.res[S] = BOT
 
-InvS_1 == pc[S] \in 5..8 => \A alpha \in AlphaDomain : \E t \in T : /\ t.state = alpha
+InvS_1 == pc[S] \in 5..8 => \A alpha \in AlphaDomain : \E t \in M : /\ t.state = alpha
                                                                     /\ t.res[S] = BOT
                                                                     
-InvS_2 == pc[S] \in 9..10 => \A alpha \in AlphaDomain : \E t \in T : /\ t.state = A
+InvS_2 == pc[S] \in 9..10 => \A alpha \in AlphaDomain : \E t \in M : /\ t.state = A
                                                                      /\ t.res[S] = alpha
                                                                      
 InvS_3 == pc[S] \in 6..8 <=> X = TRUE
@@ -284,9 +284,9 @@ THEOREM Spec => []Inv
       BY DEF TypeOK
     <3>10. a \in [IndexSet -> Nat]
       BY DEF TypeOK
-    <3>11. j \in 0..M
+    <3>11. j \in 0..N_COMPS
       BY DEF TypeOK
-    <3>12. T \in SUBSET CorrectTupleDomain
+    <3>12. M \in SUBSET CorrectTupleDomain
       BY DEF CorrectTupleDomain, TypeOK, tTypeOK
     <3>13. QED
       BY <3>1, <3>10, <3>11, <3>12, <3>2, <3>3, <3>4, <3>5, <3>6, <3>7, <3>8, <3>9 DEF TypeOK
@@ -371,17 +371,17 @@ THEOREM Spec => []Inv
           OBVIOUS
         <5>10. (a \in [IndexSet -> Nat])'
           OBVIOUS
-        <5>11. (j \in 0..M)'
+        <5>11. (j \in 0..N_COMPS)'
           OBVIOUS
-        <5>12. (T \in SUBSET CorrectTupleDomain)'
-          <6> SUFFICES ASSUME NEW u \in T'
+        <5>12. (M \in SUBSET CorrectTupleDomain)'
+          <6> SUFFICES ASSUME NEW u \in M'
                        PROVE  u \in CorrectTupleDomain'
             OBVIOUS
-          <6>1. CASE u \in T
+          <6>1. CASE u \in M
             BY <6>1
-          <6>2. CASE u \in {[state |-> [t.state EXCEPT ![i[p]] = v[p]], res |-> [t.res EXCEPT ![p] = ACK]] : t \in T}
+          <6>2. CASE u \in {[state |-> [t.state EXCEPT ![i[p]] = v[p]], res |-> [t.res EXCEPT ![p] = ACK]] : t \in M}
             <7> USE <6>2
-            <7>1. PICK t \in T : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]], res |-> [t.res EXCEPT ![p] = ACK]]
+            <7>1. PICK t \in M : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]], res |-> [t.res EXCEPT ![p] = ACK]]
               OBVIOUS
             <7>2. /\ u \in [state: [IndexSet -> Nat], res: [AllProcs -> [IndexSet -> Nat] \union {ACK, BOT}]]
                   /\ \A q \in AllProcs : p /= q => u.res[q] = t.res[q]
@@ -422,14 +422,14 @@ THEOREM Spec => []Inv
           BY <4>5, <3>1 DEF L04
         <5>10. (a \in [IndexSet -> Nat])'
           BY <4>5, <3>1 DEF L04
-        <5>11. (j \in 0..M)'
+        <5>11. (j \in 0..N_COMPS)'
           BY <4>5, <3>1 DEF L04
-        <5>12. (T \in SUBSET CorrectTupleDomain)'
+        <5>12. (M \in SUBSET CorrectTupleDomain)'
           <6> USE <4>5, <3>1 DEF L04
-          <6> SUFFICES ASSUME NEW u \in T'
+          <6> SUFFICES ASSUME NEW u \in M'
                    PROVE u \in CorrectTupleDomain'
             OBVIOUS
-          <6>1. \E t \in T : /\ u = [state |-> t.state, res |-> [t.res EXCEPT ![p] = BOT]]
+          <6>1. \E t \in M : /\ u = [state |-> t.state, res |-> [t.res EXCEPT ![p] = BOT]]
                              /\ t.res[p] = ACK
             OBVIOUS
           <6>2. u \in [state: [IndexSet -> Nat], res: [AllProcs -> [IndexSet -> Nat] \union {ACK, BOT}]]
@@ -468,9 +468,9 @@ THEOREM Spec => []Inv
         BY <3>4 DEF L07
       <4>10. (a \in [IndexSet -> Nat])'
         BY <3>4 DEF L07
-      <4>11. (j \in 0..M)'
+      <4>11. (j \in 0..N_COMPS)'
         BY <3>4 DEF L07
-      <4>12. (T \in SUBSET CorrectTupleDomain)'
+      <4>12. (M \in SUBSET CorrectTupleDomain)'
         BY <3>4 DEF L07
       <4>13. QED
         BY <4>1, <4>10, <4>11, <4>12, <4>2, <4>3, <4>4, <4>5, <4>6, <4>7, <4>8, <4>9 DEF TypeOK
@@ -496,10 +496,10 @@ THEOREM Spec => []Inv
         BY <3>5 DEF L08
       <4>10. (a \in [IndexSet -> Nat])'
         BY <3>5 DEF L08
-      <4>11. (j \in 0..M)'
+      <4>11. (j \in 0..N_COMPS)'
         BY <3>5 DEF L08
-      <4>12. (T \in SUBSET CorrectTupleDomain)'
-        <5> SUFFICES ASSUME NEW t \in T'
+      <4>12. (M \in SUBSET CorrectTupleDomain)'
+        <5> SUFFICES ASSUME NEW t \in M'
                      PROVE t \in CorrectTupleDomain'
           OBVIOUS
         <5>1. QED
@@ -527,9 +527,9 @@ THEOREM Spec => []Inv
         BY <3>6 DEF L09
       <4>10. (a \in [IndexSet -> Nat])'
         BY <3>6 DEF L09
-      <4>11. (j \in 0..M)'
+      <4>11. (j \in 0..N_COMPS)'
         BY <3>6 DEF L09
-      <4>12. (T \in SUBSET CorrectTupleDomain)'
+      <4>12. (M \in SUBSET CorrectTupleDomain)'
         BY <3>6 DEF L09
       <4>13. QED
         BY <4>1, <4>10, <4>11, <4>12, <4>2, <4>3, <4>4, <4>5, <4>6, <4>7, <4>8, <4>9 DEF TypeOK
@@ -555,14 +555,14 @@ THEOREM Spec => []Inv
         BY <3>7 DEF L10
       <4>10. (a \in [IndexSet -> Nat])'
         BY <3>7 DEF L10
-      <4>11. (j \in 0..M)'
+      <4>11. (j \in 0..N_COMPS)'
         BY <3>7 DEF L10
-      <4>12. (T \in SUBSET CorrectTupleDomain)'
+      <4>12. (M \in SUBSET CorrectTupleDomain)'
         <5> USE <3>7 DEF L10
-        <5> SUFFICES ASSUME NEW u \in T'
+        <5> SUFFICES ASSUME NEW u \in M'
                      PROVE u \in CorrectTupleDomain'
           OBVIOUS
-        <5>1. \E t \in T : /\ u = [state |-> t.state, res |-> [t.res EXCEPT ![S] = BOT]]
+        <5>1. \E t \in M : /\ u = [state |-> t.state, res |-> [t.res EXCEPT ![S] = BOT]]
                            /\ t.res[S] = a
            OBVIOUS
         <5>2. u \in [state: [IndexSet -> Nat], res: [AllProcs -> [IndexSet -> Nat] \union {ACK, BOT}]]
@@ -599,9 +599,9 @@ THEOREM Spec => []Inv
                  L04(p)
           PROVE  InvNL'
       <4> USE <3>5 DEF L04
-      <4>1. PICK t \in T : TRUE
+      <4>1. PICK t \in M : TRUE
         OBVIOUS
-      <4>2. PICK u \in T : /\ u.state = [t.state EXCEPT ![i[p]] = A[i[p]]]
+      <4>2. PICK u \in M : /\ u.state = [t.state EXCEPT ![i[p]] = A[i[p]]]
                            /\ u.res = [t.res EXCEPT ![p] = ACK]
         BY <4>1, Isa DEF InvW, Inv_W2, TypeOK
       <4>3. u.res[p] = ACK
@@ -624,7 +624,7 @@ THEOREM Spec => []Inv
         BY DEF D
       <4>2. PICK alpha \in AlphaDomain : alpha = a
         BY <4>1 DEF AlphaDomain, IndexSet, TypeOK
-      <4>3. \E t \in T : t.res[S] = a
+      <4>3. \E t \in M : t.res[S] = a
         BY <4>2 DEF InvS, InvS_2, TypeOK
       <4> QED
         BY <4>2, <4>3
@@ -685,27 +685,27 @@ THEOREM Spec => []Inv
         <5> USE <4>2 DEF L01
         <5> SUFFICES ASSUME NEW q \in WProcSet,
                     pc'[q] \in 2..4,
-                    NEW t \in T'
-             PROVE  \E u \in T' : /\ u.state = [t.state EXCEPT ![i'[q]] = A'[i'[q]]]
+                    NEW t \in M'
+             PROVE  \E u \in M' : /\ u.state = [t.state EXCEPT ![i'[q]] = A'[i'[q]]]
                                   /\ u.res = [t.res EXCEPT ![q] = ACK]
           BY Zenon
         <5>1. CASE p = q
           <6> USE <5>1
-          <6>1. CASE t \in T
+          <6>1. CASE t \in M
             <7> USE <6>1
-            <7>1. PICK u \in T' : u = [state |-> [t.state EXCEPT ![i[q]] = v[q]], res |-> [t.res EXCEPT ![q] = ACK]]
+            <7>1. PICK u \in M' : u = [state |-> [t.state EXCEPT ![i[q]] = v[q]], res |-> [t.res EXCEPT ![q] = ACK]]
               BY Zenon
             <7> QED
               BY <3>1, <7>1 DEF Inv_W3
-          <6>2. CASE t \notin T
+          <6>2. CASE t \notin M
             BY <3>1, <6>2 DEF Inv_W3
           <6>3. QED
             BY <6>1, <6>2
         <5>2. CASE p /= q
           <6> USE <5>2
-          <6>1. CASE t \in T
+          <6>1. CASE t \in M
             <7> USE <6>1
-            <7>1. \E u \in T : /\ u.state = [t.state EXCEPT ![i[q]] = A[i[q]]]
+            <7>1. \E u \in M : /\ u.state = [t.state EXCEPT ![i[q]] = A[i[q]]]
                                /\ u.res = [t.res EXCEPT ![q] = ACK]
               OBVIOUS
             <7>2. /\ i[q] = i'[q]
@@ -713,18 +713,18 @@ THEOREM Spec => []Inv
               BY DEF InvC
             <7>3. QED
               BY <7>1, <7>2
-          <6>2. CASE t \notin T
+          <6>2. CASE t \notin M
             <7> USE <6>2
-            <7>1. PICK t_ \in T : t = [state |-> [t_.state EXCEPT ![i[p]] = v[p]], 
+            <7>1. PICK t_ \in M : t = [state |-> [t_.state EXCEPT ![i[p]] = v[p]], 
                                        res   |-> [t_.res   EXCEPT ![p]    = ACK]]
               OBVIOUS
-            <7>2. PICK u_ \in T : /\ u_.state = [t_.state EXCEPT ![i[q]] = A[i[q]]]
+            <7>2. PICK u_ \in M : /\ u_.state = [t_.state EXCEPT ![i[q]] = A[i[q]]]
                                   /\ u_.res = [t_.res EXCEPT ![q] = ACK]
               BY <7>1
             <7>3. /\ i[q] = i'[q]
                   /\ A'[i'[q]] = A[i[q]]
               BY DEF InvC
-            <7>4. PICK u \in T' : u = [state |-> [u_.state EXCEPT ![i[p]] = v[p]], 
+            <7>4. PICK u \in M' : u = [state |-> [u_.state EXCEPT ![i[p]] = v[p]], 
                                        res   |-> [u_.res   EXCEPT ![p]    = ACK]]
               BY Zenon
             <7>5. u.state = [t.state EXCEPT ![i'[q]] = A'[i'[q]]]
@@ -752,20 +752,20 @@ THEOREM Spec => []Inv
         <5> USE <4>5 DEF L04
         <5> SUFFICES ASSUME NEW q \in WProcSet,
                             (pc[q] \in 2..4)',
-                            NEW u \in T'
-                     PROVE  \E w \in T' : /\ w.state = [u.state EXCEPT ![i'[q]] = A'[i'[q]]]
+                            NEW u \in M'
+                     PROVE  \E w \in M' : /\ w.state = [u.state EXCEPT ![i'[q]] = A'[i'[q]]]
                                           /\ w.res = [u.res EXCEPT ![q] = ACK]
           OBVIOUS
-        <5>1. PICK t_1 \in T : /\ u = [state |-> t_1.state,
+        <5>1. PICK t_1 \in M : /\ u = [state |-> t_1.state,
                                        res   |-> [t_1.res EXCEPT ![p] = BOT]]
                                /\ t_1.res[p] = ACK
           OBVIOUS
-        <5>2. PICK t \in T : /\ t.state = [t_1.state EXCEPT ![i'[q]] = A'[i'[q]]]
+        <5>2. PICK t \in M : /\ t.state = [t_1.state EXCEPT ![i'[q]] = A'[i'[q]]]
                              /\ t.res = [t_1.res EXCEPT ![q] = ACK]
           BY <5>1
         <5>3. t.res[p] = ACK
           BY <5>1, <5>2
-        <5>4. PICK w \in T' : w = [state |-> t.state,
+        <5>4. PICK w \in M' : w = [state |-> t.state,
                                    res   |-> [t.res EXCEPT ![p] = BOT]]
           BY <5>3
         <5>5. w.state = [u.state EXCEPT ![i'[q]] = A'[i'[q]]]
@@ -787,11 +787,11 @@ THEOREM Spec => []Inv
         <5> USE <4>9 DEF L08
         <5> SUFFICES ASSUME NEW p \in WProcSet,
                             pc'[p] \in 2..4,
-                            NEW u \in T'
-                     PROVE  \E w \in T' : /\ w.state = [u.state EXCEPT ![i'[p]] = A'[i'[p]]]
+                            NEW u \in M'
+                     PROVE  \E w \in M' : /\ w.state = [u.state EXCEPT ![i'[p]] = A'[i'[p]]]
                                           /\ w.res = [u.res EXCEPT ![p] = ACK]
           BY DEF TypeOK
-        <5>1. PICK t_1 \in T : u = [state |-> A,
+        <5>1. PICK t_1 \in M : u = [state |-> A,
                                     res   |-> Merge([q \in WProcSet |-> IF pc[q] \in {0, 1} THEN BOT ELSE ACK],
                                                     Map(S, t_1.state))]
           OBVIOUS
@@ -810,20 +810,20 @@ THEOREM Spec => []Inv
         <5> USE <4>11 DEF L10
         <5> SUFFICES ASSUME NEW p \in WProcSet,
                             pc'[p] \in 2..4,
-                            NEW u \in T'
-                     PROVE  \E w \in T' : /\ w.state = [u.state EXCEPT ![i'[p]] = A'[i'[p]]]
+                            NEW u \in M'
+                     PROVE  \E w \in M' : /\ w.state = [u.state EXCEPT ![i'[p]] = A'[i'[p]]]
                                           /\ w.res = [u.res EXCEPT ![p] = ACK]
           BY DEF TypeOK
-        <5>1. PICK t_1 \in T : /\ u = [state |-> t_1.state,
+        <5>1. PICK t_1 \in M : /\ u = [state |-> t_1.state,
                                        res   |-> [t_1.res EXCEPT ![S] = BOT]]
                                /\ t_1.res[S] = a
           OBVIOUS
-        <5>2. PICK t \in T : /\ t.state = [t_1.state EXCEPT ![i[p]] = A[i[p]]]
+        <5>2. PICK t \in M : /\ t.state = [t_1.state EXCEPT ![i[p]] = A[i[p]]]
                              /\ t.res = [t_1.res EXCEPT ![p] = ACK]
           OBVIOUS
         <5>3.  t.res[S] = a
           BY <5>1, <5>2 DEF TypeOK
-        <5>4. PICK w \in T' : w = [state |-> t.state,
+        <5>4. PICK w \in M' : w = [state |-> t.state,
                                    res   |-> [t.res EXCEPT ![S] = BOT]]
           BY Isa, <5>2, <5>3
         <5>5. w.state = [u.state EXCEPT ![i'[p]] = A'[i'[p]]]
@@ -849,11 +849,11 @@ THEOREM Spec => []Inv
         <5> USE <4>2 DEF L01
         <5> SUFFICES ASSUME NEW q \in WProcSet',
                             pc'[q] \in 2..4,
-                            NEW u \in T',
+                            NEW u \in M',
                             u.state[i[q]] /= A'[i[q]]
                      PROVE  u.res[q] = BOT
           OBVIOUS
-        <5>1. CASE u \in T
+        <5>1. CASE u \in M
           <6> USE <5>1
           <6>1. CASE q /= p
             <7> USE <6>1
@@ -866,9 +866,9 @@ THEOREM Spec => []Inv
               BY <6>1 DEF Inv01
           <6> QED
             BY <6>1, <6>2
-        <5>2. CASE u \notin T
+        <5>2. CASE u \notin M
           <6> USE <5>2
-          <6>1. PICK t \in T : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]], 
+          <6>1. PICK t \in M : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]], 
                                     res   |-> [t.res   EXCEPT ![p]    = ACK]]
             OBVIOUS
           <6>2. CASE q /= p
@@ -904,11 +904,11 @@ THEOREM Spec => []Inv
         <5> USE <4>5 DEF L04
         <5> SUFFICES ASSUME NEW q \in WProcSet,
                             pc'[q] \in 2..4,
-                            NEW u \in T',
+                            NEW u \in M',
                             (u.state[i[q]] /= A[i[q]])'
                      PROVE  (u.res[q] = BOT)'
           BY DEF Inv_W1
-        <5>1. PICK t \in T : u = [state |-> t.state,
+        <5>1. PICK t \in M : u = [state |-> t.state,
                                   res   |-> [t.res EXCEPT ![p] = BOT]]
           OBVIOUS
         <5> QED
@@ -928,11 +928,11 @@ THEOREM Spec => []Inv
         <5> USE <4>11 DEF L10
         <5> SUFFICES ASSUME NEW p \in WProcSet,
                             (pc[p] \in 2..4)',
-                            NEW u \in T',
+                            NEW u \in M',
                             (u.state[i[p]] /= A[i[p]])'
                      PROVE  (u.res[p] = BOT)'
           OBVIOUS
-        <5>1. PICK t \in T : u = [state |-> t.state,
+        <5>1. PICK t \in M : u = [state |-> t.state,
                                   res   |-> [t.res EXCEPT ![S] = BOT]]
           OBVIOUS
         <5> QED
@@ -994,7 +994,7 @@ THEOREM Spec => []Inv
         <5> USE <4>2 DEF L01
         <5> SUFFICES ASSUME NEW k \in IndexSet,
                             \A q \in WProcSet : pc[q] = 0 \/ i[q] /= k,
-                            NEW t \in T'
+                            NEW t \in M'
                      PROVE  t.state[k] = A'[k]
           BY DEF Inv_W4
         <5>1. CASE k /= i[p]
@@ -1018,14 +1018,14 @@ THEOREM Spec => []Inv
         <5> USE <4>5 DEF L04
         <5> SUFFICES ASSUME NEW k \in IndexSet,
                             \A q \in WProcSet : pc'[q] = 0 \/ i'[q] /= k,
-                            NEW u \in T'
+                            NEW u \in M'
                      PROVE  u.state[k] = A[k]
           OBVIOUS
         <5>1. CASE k /= i[p]
           BY <5>1
         <5>2. CASE k = i[p]
           <6> USE <5>2
-          <6>1. PICK t \in T : /\ u = [state |-> t.state, res |-> [t.res EXCEPT ![p] = BOT]]
+          <6>1. PICK t \in M : /\ u = [state |-> t.state, res |-> [t.res EXCEPT ![p] = BOT]]
                                /\ t.res[p] = ACK
             OBVIOUS
           <6>2. t.state[k] = A[k]
@@ -1076,7 +1076,7 @@ THEOREM Spec => []Inv
         <5> USE <4>2 DEF L01
         <5> SUFFICES ASSUME pc[S]' \in 5..8,
                             NEW beta \in AlphaDomain'
-                     PROVE  \E u \in T' : /\ u.state = beta
+                     PROVE  \E u \in M' : /\ u.state = beta
                                           /\ u.res[S] = BOT
           BY DEF InvS_1
         <5>1. pc[S] = pc[S]'
@@ -1097,10 +1097,10 @@ THEOREM Spec => []Inv
               BY <7>4, <7>5 DEF AlphaDomain
             <7> QED
               BY <7>6
-          <6>2. PICK t \in T : /\ t.state = alpha
+          <6>2. PICK t \in M : /\ t.state = alpha
                                /\ t.res[S] = BOT
             BY <6>1
-          <6>3. PICK u \in T' : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]], 
+          <6>3. PICK u \in M' : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]], 
                                      res   |-> [t.res   EXCEPT ![p]    = ACK]]
             BY <6>2
           <6>4. u.state = beta
@@ -1159,7 +1159,7 @@ THEOREM Spec => []Inv
         <5> USE <4>4 DEF L03
         <5> SUFFICES ASSUME (pc[S] \in 5..8)',
                             NEW alpha \in AlphaDomain'
-                     PROVE  \E t \in T' : /\ t.state = alpha
+                     PROVE  \E t \in M' : /\ t.state = alpha
                                           /\ t.res[S] = BOT
           OBVIOUS
         <5>1. \A k \in IndexSet : k /= i[p] => D(k) = D(k)'
@@ -1181,17 +1181,17 @@ THEOREM Spec => []Inv
         <5> USE <4>5 DEF L04
         <5> SUFFICES ASSUME pc'[S] \in 5..8,
                             NEW alpha \in AlphaDomain'
-                     PROVE  \E u \in T' : /\ u.state = alpha
+                     PROVE  \E u \in M' : /\ u.state = alpha
                                           /\ u.res[S] = BOT
           BY DEF InvS_1
         <5>1. \A k \in IndexSet : D(k) = D(k)'
           BY DEF D, TypeOK
         <5>2. AlphaDomain = AlphaDomain'
           BY <5>1 DEF AlphaDomain
-        <5>3. PICK t_1 \in T : /\ t_1.state = alpha
+        <5>3. PICK t_1 \in M : /\ t_1.state = alpha
                                /\ t_1.res[S] = BOT
           BY <5>2
-        <5>4. PICK t \in T : /\ t.state = [t_1.state EXCEPT ![i[p]] = A[i[p]]]
+        <5>4. PICK t \in M : /\ t.state = [t_1.state EXCEPT ![i[p]] = A[i[p]]]
                              /\ t.res = [t_1.res EXCEPT ![p] = ACK]
           BY DEF InvW, Inv_W2
         <5>5. t_1.state[i[p]] = A[i[p]]
@@ -1233,7 +1233,7 @@ THEOREM Spec => []Inv
         <5>7. /\ t.res[p] = ACK
               /\ t.res[S] = BOT
           BY <5>3, <5>4 DEF TypeOK, CorrectTupleDomain
-        <5>8. PICK u \in T' : u = [state |-> t.state, res |-> [t.res EXCEPT ![p] = BOT]]
+        <5>8. PICK u \in M' : u = [state |-> t.state, res |-> [t.res EXCEPT ![p] = BOT]]
           BY <5>4, <5>7
         <5>9. /\ u.state = alpha
               /\ u.res[S] = BOT
@@ -1255,7 +1255,7 @@ THEOREM Spec => []Inv
 
       <4>7. CASE L06
         <5> USE <4>7 DEF L06
-        <5>1. CASE j < M
+        <5>1. CASE j < N_COMPS
           <6> USE <5>1
           <6>1. \A k \in IndexSet : D(k) = D(k)'
             <7> SUFFICES ASSUME NEW k \in IndexSet
@@ -1289,7 +1289,7 @@ THEOREM Spec => []Inv
             BY <6>1 DEF AlphaDomain
           <6> QED
             BY <6>2
-        <5>2. CASE j = M
+        <5>2. CASE j = N_COMPS
           <6> USE <5>2 DEF IndexSet
           <6>1. \A k \in IndexSet : D(k) = D(k)'
             <7> SUFFICES ASSUME NEW k \in IndexSet
@@ -1316,7 +1316,7 @@ THEOREM Spec => []Inv
         
       <4>8. CASE L07
         <5> USE <4>8 DEF L07
-        <5>1. CASE j < M
+        <5>1. CASE j < N_COMPS
           <6> USE <5>1
           <6>1. \A k \in IndexSet : D(k) = D(k)'
             <7> SUFFICES ASSUME NEW k \in IndexSet
@@ -1356,7 +1356,7 @@ THEOREM Spec => []Inv
             BY <6>1 DEF AlphaDomain
           <6> QED
             BY <6>2
-        <5>2. CASE j = M
+        <5>2. CASE j = N_COMPS
           <6> USE <5>2 DEF IndexSet
           <6>1. \A k \in IndexSet : D(k) = D(k)'
             <7> SUFFICES ASSUME NEW k \in IndexSet
@@ -1386,19 +1386,19 @@ THEOREM Spec => []Inv
         <5> USE <4>11 DEF L10
         <5> SUFFICES ASSUME pc'[S] \in 5..8,
                             NEW alpha \in AlphaDomain'
-                     PROVE  \E t \in T' : /\ t.state = alpha
+                     PROVE  \E t \in M' : /\ t.state = alpha
                                           /\ t.res[S] = BOT
           BY DEF InvS_1
         <5>1. \A k \in IndexSet : D(k) = {a[k]}
           BY DEF D
         <5>2. a \in AlphaDomain
           BY <5>1 DEF AlphaDomain, TypeOK, IndexSet
-        <5>3. PICK t \in T : /\ t.state = A
+        <5>3. PICK t \in M : /\ t.state = A
                              /\ t.res[S] = a
           BY <5>2 DEF InvS_2
-        <5>4. t \in {u \in T : u.res[S] = a}
+        <5>4. t \in {u \in M : u.res[S] = a}
           BY <5>3
-        <5>5. PICK u \in T' : u = [state |-> t.state, res |-> [t.res EXCEPT ![S] = BOT]]
+        <5>5. PICK u \in M' : u = [state |-> t.state, res |-> [t.res EXCEPT ![S] = BOT]]
           BY <5>3, <5>4
         <5>6. u.state = A'
           BY <5>3, <5>5
@@ -1437,7 +1437,7 @@ THEOREM Spec => []Inv
         <5> USE <4>2 DEF L01
         <5> SUFFICES ASSUME pc'[S] \in 9..10,
                             NEW alpha \in AlphaDomain'
-                     PROVE  \E u \in T' : /\ u.state = A'
+                     PROVE  \E u \in M' : /\ u.state = A'
                                           /\ u.res[S] = alpha
           OBVIOUS
         <5>1. \A k \in IndexSet : k /= i[p] => D(k) = D(k)'
@@ -1448,10 +1448,10 @@ THEOREM Spec => []Inv
           BY <5>1, <5>2
         <5>4. AlphaDomain = AlphaDomain'
           BY <5>3 DEF AlphaDomain
-        <5>5. PICK t \in T : /\ t.state = A
+        <5>5. PICK t \in M : /\ t.state = A
                              /\ t.res[S] = alpha
           BY <5>4
-        <5>6. PICK u \in T' : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]],
+        <5>6. PICK u \in M' : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]],
                                    res   |-> [t.res   EXCEPT ![p]    = ACK]]
           OBVIOUS
         <5>7. /\ u.state = A'
@@ -1477,7 +1477,7 @@ THEOREM Spec => []Inv
         <5> USE <4>4 DEF L03
         <5> SUFFICES ASSUME pc'[S] \in 9..10,
                             NEW alpha \in AlphaDomain'
-                     PROVE  \E t \in T' : /\ t.state = A
+                     PROVE  \E t \in M' : /\ t.state = A
                                           /\ t.res[S] = alpha
           OBVIOUS
         <5>1. \A k \in IndexSet : k /= i[p] => D(k) = D(k)'
@@ -1499,26 +1499,26 @@ THEOREM Spec => []Inv
         <5> USE <4>5 DEF L04
         <5> SUFFICES ASSUME pc'[S] \in 9..10,
                             NEW alpha \in AlphaDomain'
-                     PROVE  \E u \in T' : /\ u.state = A
+                     PROVE  \E u \in M' : /\ u.state = A
                                           /\ u.res[S] = alpha
           OBVIOUS
         <5>1. \A k \in IndexSet : D(k)' = D(k)
           BY DEF D
         <5>2. AlphaDomain = AlphaDomain'
           BY <5>1 DEF AlphaDomain
-        <5>3. PICK t_1 \in T : /\ t_1.state = A
+        <5>3. PICK t_1 \in M : /\ t_1.state = A
                                /\ t_1.res[S] = alpha
           BY <5>2
         <5>4. pc[p] \in 2..4
           OBVIOUS
-        <5>5. PICK t \in T : /\ t.state = [t_1.state EXCEPT ![i[p]] = A[i[p]]]
+        <5>5. PICK t \in M : /\ t.state = [t_1.state EXCEPT ![i[p]] = A[i[p]]]
                              /\ t.res = [t_1.res EXCEPT ![p] = ACK]
           BY <5>4 DEF InvW, Inv_W2
         <5>6. /\ t.res[p] = ACK
               /\ t.state = A
               /\ t.res[S] = alpha
           BY <5>3, <5>5 DEF TypeOK, CorrectTupleDomain
-        <5>7. PICK u \in T' : u = [state |-> t.state,
+        <5>7. PICK u \in M' : u = [state |-> t.state,
                                    res   |-> [t.res EXCEPT ![p] = BOT]]
           BY <5>5, <5>6
         <5>8. /\ u.state = A
@@ -1537,17 +1537,17 @@ THEOREM Spec => []Inv
         <5> USE <4>9 DEF L08
         <5> SUFFICES ASSUME pc'[S] \in 9..10,
                             NEW alpha \in AlphaDomain'
-                     PROVE  \E u \in T' : /\ u.state = A
+                     PROVE  \E u \in M' : /\ u.state = A
                                           /\ u.res[S] = alpha
           OBVIOUS
         <5>1. \A k \in IndexSet : D(k)' \in SUBSET D(k)
           BY DEF D, TypeOK, IndexSet
         <5>2. AlphaDomain' \in SUBSET AlphaDomain
           BY <5>1 DEF AlphaDomain
-        <5>3. PICK t \in T : /\ t.state = alpha
+        <5>3. PICK t \in M : /\ t.state = alpha
                              /\ t.res[S] = BOT
           BY <5>2 DEF InvS_1
-        <5>4. PICK u \in T' : u = [state |-> A,
+        <5>4. PICK u \in M' : u = [state |-> A,
                                    res   |-> Merge([p \in WProcSet |-> IF pc[p] \in {0, 1} THEN BOT ELSE ACK],
                                                     Map(S, t.state))]
           BY <5>3
@@ -1559,7 +1559,7 @@ THEOREM Spec => []Inv
         
       <4>10. CASE L09
         <5> USE <4>10 DEF L09
-        <5>1. CASE j < M
+        <5>1. CASE j < N_COMPS
           <6> USE <5>1
           <6>1. \A k \in IndexSet : k /= j => D(k) = D(k)'
             <7> SUFFICES ASSUME NEW k \in IndexSet,
@@ -1603,7 +1603,7 @@ THEOREM Spec => []Inv
             BY <6>1, <6>2 DEF AlphaDomain
           <6> QED
             BY <6>3
-        <5>2. CASE j = M
+        <5>2. CASE j = N_COMPS
           <6> USE <5>2
           <6>1 \A k \in IndexSet : k < j
             BY DEF IndexSet
@@ -1700,9 +1700,9 @@ THEOREM Spec => []Inv
         BY <4>6 DEF L05
       <4>7. CASE L06
         <5> USE <4>7 DEF L06
-        <5>1. CASE j < M
+        <5>1. CASE j < N_COMPS
           BY <5>1 DEF TypeOK
-        <5>2. CASE j = M
+        <5>2. CASE j = N_COMPS
           <6> USE <5>2
           <6>1. \A k \in IndexSet : (pc'[S] = 8 \/ k < j') = FALSE
             BY DEF TypeOK, IndexSet
@@ -1726,7 +1726,7 @@ THEOREM Spec => []Inv
             BY <6>1
         <5>2. CASE k = j
           <6> USE <5>2
-          <6>1. j < M
+          <6>1. j < N_COMPS
             BY DEF IndexSet
           <6>2. a'[k] = A[k]
             BY <6>1 DEF TypeOK
@@ -1800,7 +1800,7 @@ THEOREM Spec => []Inv
             BY <6>1
         <5>2. CASE k = j
           <6> USE <5>2
-          <6>1. j < M
+          <6>1. j < N_COMPS
             BY DEF IndexSet
           <6>2. B'[k] = BOT
             BY <6>1 DEF TypeOK
@@ -1838,14 +1838,14 @@ THEOREM Spec => []Inv
       <4> USE <3>2 DEF L01
       <4> SUFFICES ASSUME NEW q \in WProcSet',
                           pc[q] = 0,
-                          NEW u \in T'
+                          NEW u \in M'
                    PROVE  u.res[q] = BOT
         OBVIOUS
-      <4>1. CASE u \in T
+      <4>1. CASE u \in M
         BY <4>1
-      <4>2. CASE u \notin T
+      <4>2. CASE u \notin M
         <5> USE <4>2
-        <5>1.  PICK t \in T : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]], 
+        <5>1.  PICK t \in M : u = [state |-> [t.state EXCEPT ![i[p]] = v[p]], 
                                    res   |-> [t.res   EXCEPT ![p]    = ACK]]
           OBVIOUS
         <5> QED
@@ -1867,10 +1867,10 @@ THEOREM Spec => []Inv
       <4> USE <3>5 DEF L04
       <4> SUFFICES ASSUME NEW q \in WProcSet',
                           pc'[q] = 0,
-                          NEW u \in T'
+                          NEW u \in M'
                    PROVE  u.res[q] = BOT
         OBVIOUS
-      <4>1. PICK t \in T : u = [state |-> t.state,
+      <4>1. PICK t \in M : u = [state |-> t.state,
                                 res   |-> [t.res EXCEPT ![p] = BOT]]
         OBVIOUS
       <4>2. CASE q /= p
@@ -1893,10 +1893,10 @@ THEOREM Spec => []Inv
       <4> USE <3>11 DEF L10
       <4> SUFFICES ASSUME NEW p \in WProcSet,
                           pc[p] = 0,
-                          NEW u \in T'
+                          NEW u \in M'
                    PROVE  u.res[p] = BOT
         OBVIOUS
-      <4>1. PICK t \in T : u = [state |-> t.state,
+      <4>1. PICK t \in M : u = [state |-> t.state,
                                 res   |-> [t.res EXCEPT ![S] = BOT]]
         OBVIOUS
       <4> QED
@@ -1915,7 +1915,7 @@ THEOREM Spec => []Inv
       <4> USE <3>1 DEF L00
       <4> SUFFICES ASSUME NEW q \in WProcSet',
                           pc'[q] = 1,
-                          NEW t \in T
+                          NEW t \in M
                    PROVE  /\ t.state[i'[q]] = A[i'[q]]
                           /\ t.res[q] = BOT
         OBVIOUS
