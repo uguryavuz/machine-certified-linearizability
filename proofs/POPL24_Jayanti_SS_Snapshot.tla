@@ -1,15 +1,29 @@
 --------------------- MODULE POPL24_Jayanti_SS_Snapshot ---------------------
 (****************************************************************************
-Author: Uğur Y. Yavuz, Lizzie Hernández Videa
+Authors: Prasad Jayanti, Siddhartha Jayanti, Uğur Y. Yavuz, Lizzie Hernández Videa
 Date: 2023-09-28
 
 This is the TLA+ specification of Jayanti's single-writer, single-scanner
-snapshot algorithm [Jayanti, 2005], and its proof of linearizability in 
-TLAPS, using the tracking technique as described in our work
+snapshot algorithm [Jayanti, 2005] (Figure 1), and its proof of linearizability 
+in TLAPS, using the tracking technique as described in our work
 "A Universal, Sound, and Complete Forward Reasoning Technique for 
 Machine-Verified Proofs of Linearizability", to appear in POPL 2024.
 Specficially, it corresponds to the partial tracker described in
 the Appendix.
+
+[Jayanti, 2005] 
+Prasad Jayanti. 2005. 
+"An optimal multi-writer snapshot algorithm."
+In Proceedings of the thirty-seventh annual ACM symposium on Theory of computing (STOC '05). 
+Association for Computing Machinery, New York, NY, USA, 723–732. https://doi.org/10.1145/1060590.1060697
+
+FILE OUTLINE:
+    \* - Lines 78-93: Preliminary definitions
+    \* - Lines 93-254: Specification
+    \* - Lines 254-414: Type-correctness and proof of type-correctness
+    \* - Lines 414-524: Remaining invariants
+    \* - Lines 524-1744: Proof of inductive invariance
+    \* - Lines 1744-1746: Proof of linearizability (immediate from the proof above)
 
 TYPE: 
     - Write(i, v) for all writing processes p in 1..N,
@@ -21,7 +35,6 @@ CONSTANTS:
           avoid confusion with the meta-configuration M.
 
 MODEL VALUES: 
-    * Model values compare false to everything but themselves. 
     - ACK ('ack' in the paper) is a special value that is used to indicate 
       an operation has been completed.
     - BOT (\bot in the paper) is akin to a null value.
@@ -61,7 +74,7 @@ ALGORITHM:
 NOTE: Each line has at most 1 shared memory instruction.
 ****************************************************************************)
 
-EXTENDS Integers, TLC, FiniteSets, TLAPS
+EXTENDS Integers, TLAPS
 
 CONSTANTS ACK, BOT, K, WriteSet, S
 VARIABLES pc, X, A, B, a, i, v, j, M   \* M is the meta-configuration.
@@ -77,28 +90,20 @@ Map(d, e)  == [x \in {d} |-> e]
 \* Merge(f, g) is the map obtained by merging f and g.
 Merge(f,g) == [x \in (DOMAIN f) \union (DOMAIN g) |-> IF x \in DOMAIN f THEN f[x] ELSE g[x]]
 
-\* Assumptions regarding the model values ACK and BOT.
-ASSUME AckBotDef == /\ ACK # BOT
-                    /\ BOT \notin Nat
-
-\* Assumptions regarding the processes.
-ASSUME ProcDef == /\ S \notin WriteSet
-
-\* K is a strictly positive integer.
-ASSUME KDef == /\ K \in Nat \ {0}
-
 \* SPECIFICATION
 
 \* The initial predicate.
-\* 
 \* Notes:
 \*   - Observe that j goes up to K, not just K-1.
 \*   - The meta-configuration M contains atomic configurations C = (C.sigma, C.f),
 \*     where C.f is a triple (op, arg, res). In the TLA+ specification, we use
-\*     (sigma, res) = (C.sigma, C.f.res) as the atomic configuration; as op and arg
+\*     (sigma, fres) = (C.sigma, C.f.res) as the atomic configuration; as op and arg
 \*     are uniquely determined by pc, i, and v.
-\*   * This helps the TLAPS proof, as it simplifies the data structure needed to
-\*     track the execution of the algorithm.
+\*   * Alternatively, one can keep these fields in the meta-configuration and
+\*     prove an invariant that, for a process p, the value of pc[p] imposes a 
+\*     unique value for C.f.op[p], and the value of the variables passed in as 
+\*     arguments, does so for C.f.arg[p], for all configurations C in M. Since
+\*     this increases proof overhead, we opt for this simplification.
 Init == /\ pc = [p \in ProcSet |-> "L0"]
         /\ X = FALSE
         /\ A \in [IndexSet -> Nat]
@@ -271,6 +276,16 @@ TypeOK == /\ pc \in [ProcSet -> {"L0", "W1", "W2", "W3", "W4", "S1", "S2", "S3",
           /\ v \in [WriteSet -> Nat]
           /\ \A w1, w2 \in WriteSet : (i[w1] = i[w2] /\ pc[w1] # "L0" /\ pc[w2] # "L0") => w1 = w2 \* Single-writer property.
           /\ M \in SUBSET CDomain
+          
+\* Assumptions regarding the model values ACK and BOT.
+ASSUME AckBotDef == /\ ACK # BOT
+                    /\ BOT \notin Nat
+
+\* Assumptions regarding the processes (S is not a writing process).
+ASSUME ProcDef == S \notin WriteSet
+
+\* K is a strictly positive integer.
+ASSUME KDef == K \in Nat \ {0}
 
 \* Proof of type-correctness.
 LEMMA InitTypeSafety == Init => TypeOK
@@ -1725,11 +1740,12 @@ THEOREM InductiveInvariant == Spec => []Inv
       BY <2>1, <2>10, <2>11, <2>12, <2>2, <2>3, <2>5, <2>4, <2>6, <2>7, <2>8, <2>9 DEF Inv
   <1> QED 
     BY <1>1, <1>2
-    
+
+\* Proof of linearizability.  
 THEOREM Linearizability == Spec => [](M # {})
   BY PTL, InductiveInvariant DEF Inv, Linearizable 
 
 =============================================================================
 \* Modification History
-\* Last modified Tue Oct 03 23:48:36 EDT 2023 by uguryavuz
+\* Last modified Sat Oct 07 13:25:51 EDT 2023 by uguryavuz
 \* Created Thu Sep 28 22:04:57 EDT 2023 by uguryavuz
