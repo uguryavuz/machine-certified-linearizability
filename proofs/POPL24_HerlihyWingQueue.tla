@@ -1,16 +1,30 @@
 ---------------------- MODULE POPL24_HerlihyWingQueue ----------------------
 (****************************************************************************
-Author: Uğur Y. Yavuz, Lizzie Hernández Videa
+Authors: Prasad Jayanti, Siddhartha Jayanti, Uğur Y. Yavuz, Lizzie Hernández Videa
 Date: 2023-10-02
 
 This is the TLA+ specification of the Herlihy-Wing queue, as described in
-[Herlihy & Wing, 1990], and its proof of linearizability in TLAPS, using
-the tracking technique as described in our work "A Universal, Sound, and 
-Complete Forward Reasoning Technique for Machine-Verified Proofs of 
-Linearizability", to appear in POPL 2024. Specficially, it corresponds to 
+[Herlihy & Wing, 1990] (on page 475 in the publication) and its proof 
+of linearizability in TLAPS, using the tracking technique as described in our work 
+"A Universal, Sound, and Complete Forward Reasoning Technique for Machine-Verified 
+Proofs of Linearizability", to appear in POPL 2024. Specficially, it corresponds to 
 the partial tracker as described in the paper and its Appendix.
 
+[Herlihy & Wing, 1990] 
+Maurice P. Herlihy and Jeannette M. Wing. 1990. 
+"Linearizability: a correctness condition for concurrent objects." 
+ACM Trans. Program. Lang. Syst. 12, 3 (July 1990), 463–492. https://doi.org/10.1145/78969.78972
+
 This file relies on lemmas proven in the file POPL24_HerlihyWingQueuePrelude.tla.
+
+FILE OUTLINE:
+    - Lines 69-130: Preliminary definitions and lemmas
+    - Lines 130-286: Specification
+    - Lines 286-377: Type-correctness and proof of type-correctness
+    - Lines 377-468: Remaining invariants
+    - Lines 467-568: Proof that invariants imply linearizability
+    - Lines 568-2799: Proof of inductive invariance
+    - Lines 2799-2801: Proof of linearizability (immediate from the two proofs above)
 
 TYPE:
     - Enqueue(v) for adding an element v to the queue. Invokable by any process.
@@ -112,10 +126,6 @@ LEMMA WellOrderingPrincipleLem == \A S : (S \in SUBSET Int /\ IsFiniteSet(S))
                                             => \E f \in Bijection(1..Cardinality(S), S) : 
                                                    (\A m, n \in 1..Cardinality(S) : m < n => f[m] < f[n])
   BY Zenon, WellOrderingPrinciple
-
-\* Assumptions regarding the model values ACK and BOT.
-ASSUME AckBotDef == /\ ACK # BOT
-                    /\ BOT \notin Nat
                     
 \* SPECIFICATION
                     
@@ -467,93 +477,93 @@ InvNL == /\ TypeOK
 \*      * FS_PigeonHole: The pigeonhole principle.
 \*   - WellOrderingPrinciple and PermLength from POP24_HerlihyWingQueuePrelude.
 THEOREM LinearizabilityFromInvNL == InvNL => Linearizable
- <1> SUFFICES ASSUME InvNL
+  <1> SUFFICES ASSUME InvNL
               PROVE  M # {}
-   BY DEF Linearizable
- <1> DEFINE A == {k \in 1..X-1 : Q[k] # BOT}
- <1>1. A \in SUBSET 1..X-1
-   OBVIOUS
- <1>2. GoodEnqSet(A)
-   BY DEF GoodEnqSet
- <1> HIDE DEF A
- <1>3. IsFiniteSet(A)
-   <2>1. IsFiniteSet(1..X-1)
-     BY FS_Interval, Isa DEF InvNL, TypeOK, PosInts
-   <2> QED
-     BY <2>1, <1>1, FS_Subset, Isa
- <1>4. A \in SUBSET Int /\ IsFiniteSet(A)
-   BY <1>1, <1>3 DEF TypeOK
- <1>5. PICK seq \in [1..Cardinality(A) -> A] : \A m, n \in 1..Cardinality(A) : m < n => seq[m] < seq[n]
-   BY WellOrderingPrinciple, <1>4, Zenon DEF Bijection, Surjection
- <1>6. seq \in Perm(A)             
-   <2> SUFFICES ASSUME NEW w \in A,
-                           \A q \in 1..Cardinality(A) : seq[q] # w
+    BY DEF Linearizable
+  <1> DEFINE A == {k \in 1..X-1 : Q[k] # BOT}
+  <1>1. A \in SUBSET 1..X-1
+    OBVIOUS
+  <1>2. GoodEnqSet(A)
+    BY DEF GoodEnqSet
+  <1> HIDE DEF A
+  <1>3. IsFiniteSet(A)
+    <2>1. IsFiniteSet(1..X-1)
+      BY FS_Interval, Isa DEF InvNL, TypeOK, PosInts
+    <2> QED
+      BY <2>1, <1>1, FS_Subset, Isa
+  <1>4. A \in SUBSET Int /\ IsFiniteSet(A)
+    BY <1>1, <1>3 DEF TypeOK
+  <1>5. PICK seq \in [1..Cardinality(A) -> A] : \A m, n \in 1..Cardinality(A) : m < n => seq[m] < seq[n]
+    BY WellOrderingPrinciple, <1>4, Zenon DEF Bijection, Surjection
+  <1>6. seq \in Perm(A)             
+    <2> SUFFICES ASSUME NEW w \in A,
+                            \A q \in 1..Cardinality(A) : seq[q] # w
                 PROVE  FALSE
-     BY DEF Perm
-   <2> DEFINE Image == {seq[k] : k \in 1..Cardinality(A)}
-   <2>1. seq \in [1..Cardinality(A) -> Image]
-     OBVIOUS
-   <2>2. Image \in SUBSET A
-     OBVIOUS
-   <2>3. w \notin Image
-     OBVIOUS
-   <2>4. Image \union {w} \in SUBSET A
-     BY <2>2
-   <2>5. IsFiniteSet(Image)
-     BY <1>3, <2>2, FS_Subset
-   <2>6. IsFiniteSet(1..Cardinality(A))
-     BY <1>3, FS_Interval, FS_CardinalityType
-   <2>7. Cardinality(Image) < Cardinality(1..Cardinality(A))
-     <3>1. Cardinality(Image \union {w}) = Cardinality(Image) + 1
-       BY <2>3, <2>5, FS_AddElement, Zenon
-     <3>2. Cardinality(A) >= Cardinality(Image) + 1
-       BY <3>1, <1>3, FS_Subset
-     <3>3. Cardinality(A) > Cardinality(Image)
-       BY <3>2, <2>5, <1>3, FS_CardinalityType
-     <3>4. Cardinality(1..Cardinality(A)) = Cardinality(A)
-       BY <1>3, FS_Interval, FS_CardinalityType
-     <3> QED
-       BY <3>3, <3>4
-   <2>8. PICK k1, k2 \in 1..Cardinality(A) : k1 # k2 /\ seq[k1] = seq[k2]
-     BY Zenon, FS_PigeonHole, <2>1, <2>5, <2>6, <2>7
-   <2>9. CASE k1 < k2
-     <5>1. seq[k1] < seq[k2]
-       BY <2>9, <1>5
-     <5> QED
-       BY <2>8, <5>1, Isa
-   <2>10. CASE k1 > k2
-     <5>1. seq[k1] > seq[k2]
-       BY <2>10, <1>5
-     <5> QED
-       BY <2>8, <5>1, Isa
-   <2> QED
-     BY <2>8, <2>9, <2>10
- <1>7. JInvSeq(seq)
-   <2> SUFFICES ASSUME NEW m \in 1..Len(seq), NEW n \in 1..Len(seq),
-                       /\ n < m
-                       /\ seq[n] > seq[m]
-                       /\ Q[seq[m]] # BOT
+      BY DEF Perm
+    <2> DEFINE Image == {seq[k] : k \in 1..Cardinality(A)}
+    <2>1. seq \in [1..Cardinality(A) -> Image]
+      OBVIOUS
+    <2>2. Image \in SUBSET A
+      OBVIOUS
+    <2>3. w \notin Image
+      OBVIOUS
+    <2>4. Image \union {w} \in SUBSET A
+      BY <2>2
+    <2>5. IsFiniteSet(Image)
+      BY <1>3, <2>2, FS_Subset
+    <2>6. IsFiniteSet(1..Cardinality(A))
+      BY <1>3, FS_Interval, FS_CardinalityType
+    <2>7. Cardinality(Image) < Cardinality(1..Cardinality(A))
+      <3>1. Cardinality(Image \union {w}) = Cardinality(Image) + 1
+        BY <2>3, <2>5, FS_AddElement, Zenon
+      <3>2. Cardinality(A) >= Cardinality(Image) + 1
+        BY <3>1, <1>3, FS_Subset
+      <3>3. Cardinality(A) > Cardinality(Image)
+        BY <3>2, <2>5, <1>3, FS_CardinalityType
+      <3>4. Cardinality(1..Cardinality(A)) = Cardinality(A)
+        BY <1>3, FS_Interval, FS_CardinalityType
+      <3> QED
+        BY <3>3, <3>4
+    <2>8. PICK k1, k2 \in 1..Cardinality(A) : k1 # k2 /\ seq[k1] = seq[k2]
+      BY Zenon, FS_PigeonHole, <2>1, <2>5, <2>6, <2>7
+    <2>9. CASE k1 < k2
+      <5>1. seq[k1] < seq[k2]
+        BY <2>9, <1>5
+      <5> QED
+        BY <2>8, <5>1, Isa
+    <2>10. CASE k1 > k2
+      <5>1. seq[k1] > seq[k2]
+        BY <2>10, <1>5
+      <5> QED
+        BY <2>8, <5>1, Isa
+    <2> QED
+      BY <2>8, <2>9, <2>10
+  <1>7. JInvSeq(seq)
+    <2> SUFFICES ASSUME NEW m \in 1..Len(seq), NEW n \in 1..Len(seq),
+                        /\ n < m
+                        /\ seq[n] > seq[m]
+                        /\ Q[seq[m]] # BOT
                 PROVE  \E p \in ProcSet : /\ pc[p] = "D3"
                                           /\ seq[n] < l[p]
                                           /\ seq[m] < j[p]
-     BY DEF JInvSeq
-   <2>1. Len(seq) = Cardinality(A)
-     BY PermLength, <1>3, <1>6
-   <2>2. m \in 1..Cardinality(A) /\ n \in 1..Cardinality(A)
-     BY <2>1
-   <2>4. seq[n] < seq[m]
-     BY <1>5, <2>2 DEF Perm
-   <2>5. /\ seq[n] \in 1..X-1
-         /\ seq[m] \in 1..X-1
-     BY <2>2, <1>1, Zenon DEF Perm
-   <2> QED
-     BY <2>4, <2>5
- <1> HIDE <1>5
- <1>8. \E c \in M : /\ ValuesMatchInds(seq, c.sigma)
+      BY DEF JInvSeq
+    <2>1. Len(seq) = Cardinality(A)
+      BY PermLength, <1>3, <1>6
+    <2>2. m \in 1..Cardinality(A) /\ n \in 1..Cardinality(A)
+      BY <2>1
+    <2>4. seq[n] < seq[m]
+      BY <1>5, <2>2 DEF Perm
+    <2>5. /\ seq[n] \in 1..X-1
+          /\ seq[m] \in 1..X-1
+      BY <2>2, <1>1, Zenon DEF Perm
+    <2> QED
+      BY <2>4, <2>5
+  <1> HIDE <1>5
+  <1>8. \E c \in M : /\ ValuesMatchInds(seq, c.sigma)
                     /\ GoodRes(A, c.fres)
-   BY <1>1, <1>2, <1>7, <1>6 DEF InvNL, Inv_Main
- <1> QED
-   BY <1>8    
+    BY <1>1, <1>2, <1>7, <1>6 DEF InvNL, Inv_Main
+  <1> QED
+    BY <1>8
        
 \* Full inductive invariant.
 Inv == /\ TypeOK
@@ -564,6 +574,10 @@ Inv == /\ TypeOK
        /\ Inv_Q
        /\ Inv_Main
        /\ Linearizable
+
+\* Assumptions regarding the model values ACK and BOT.
+ASSUME AckBotDef == /\ ACK # BOT
+                    /\ BOT \notin Nat
 
 \* Proof of inductive invariant without linearizability
 THEOREM InductiveInvariantNL == Spec => []InvNL
@@ -2778,13 +2792,15 @@ THEOREM InductiveInvariantNL == Spec => []InvNL
   <1> QED
     BY <1>1, <1>2
 
+\* Proof of full inductive invariant
 THEOREM InductiveInvariant == Spec => []Inv
   BY InductiveInvariantNL, LinearizabilityFromInvNL, PTL DEF Inv, InvNL
-  
+
+\* Proof of linearizability
 THEOREM Linearizability == Spec => [](M # {})
   BY InductiveInvariant, PTL DEF Inv, Linearizable 
 
 =============================================================================
 \* Modification History
-\* Last modified Fri Oct 06 15:38:48 EDT 2023 by uguryavuz
+\* Last modified Sat Oct 07 13:00:09 EDT 2023 by uguryavuz
 \* Created Mon Oct 02 00:09:31 EDT 2023 by uguryavuz
