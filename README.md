@@ -8,7 +8,6 @@ and these proofs are available in this artifact package, which we provide as a D
 * [proofs/POPL24_Jayanti_SS_Snapshot.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_Jayanti_SS_Snapshot.tla) contains the TLAPS proof for the linearizability of the Jayanti single-scanner snapshot implementation.
 * [proofs/POPL24_HerlihyWingQueue.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_HerlihyWingQueue.tla) contains the TLAPS proof for the linearizability of the Herlihy-Wing queue implementation.
     * [proofs/POPL24_HerlihyWingQueuePrelude.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_HerlihyWingQueue.tla) contains TLAPS proofs for a number of lemmas used in the proof of linearizability of the Herlihy-Wing queue implementation.
-
 * [proofs/POPL24_JayantiTarjanUnionFind.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_JayantiTarjanUnionFind.tla) contains the TLAPS proof for the strong linearizability of the Jayanti-Tarjan union-find object implementation.
 
 ## Installation
@@ -29,7 +28,7 @@ docker start tlaps-artifact-cont
 docker exec -it tlaps-artifact-cont /bin/bash
 ```
 
-If you want to remove the container and the image, you can do so by running the following set of commands:
+If you want to remove the container and the image, run the following set of commands:
 
 ```bash
 docker rm tlaps-artifact-cont
@@ -53,7 +52,7 @@ The first command will print a summary of the proof, and will display the number
 metric is `obligations_count`, then this means that there are no missing or omitted proofs; otherwise such the number of such proof obligations will be reported. 
 
 The second command will verify the proof, with the help of the proof fingerprints in the `POPL24_Jayanti_SS_Snapshot.tlaps` directory. The `safefp` flag ensures that the versions
-of `tlapm` (the command-line tool for TLAPS), `zenon` and `isabelle` (backend provers used by TLAPS) used in the proof are the same as the versions used to generate the fingerprints, while the `timing` flag will print a report of the time taken for each operation (parsing, analysis, interaction, fingerprint loading, etc.)
+of `tlapm` (the command-line tool for TLAPS), `zenon` and `isabelle` (backend provers used by TLAPS) in the container are the same as the versions used to generate the fingerprints, while the `timing` flag will print a report of the time taken for each operation (parsing, analysis, interaction, fingerprint loading, etc.)
 
 ### Herlihy-Wing queue
 
@@ -66,7 +65,7 @@ tlapm POPL24_HerlihyWingQueue.tla --summary
 tlapm POPL24_HerlihyWingQueue.tla --timing --safefp --stretch 3
 ```
 
-The first two commands will verify the prelude, which contains a number of lemmas used in the proof of linearizability of the Herlihy-Wing queue. The `stretch` flag in the last two commands will triple the default timeout for the proof search, which is necessary for the proof of linearizability of the Herlihy-Wing queue due to its increased complexity.
+The first two commands will verify the prelude, which contains a number of lemmas used in the proof of linearizability of the Herlihy-Wing queue. The `stretch` flag in the last command will multiply the default timeout for the proof search (here, it will triple), which is necessary for the proof of linearizability of the Herlihy-Wing queue due to its increased complexity.
 
 ### Jayanti-Tarjan union-find
 
