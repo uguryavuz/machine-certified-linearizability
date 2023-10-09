@@ -8,7 +8,7 @@ and these proofs are available in this artifact package, which we provide as a D
 * [proofs/POPL24_Jayanti_SS_Snapshot.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_Jayanti_SS_Snapshot.tla) contains the TLAPS proof for the linearizability of the Jayanti single-scanner snapshot implementation.
 * [proofs/POPL24_HerlihyWingQueue.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_HerlihyWingQueue.tla) contains the TLAPS proof for the linearizability of the Herlihy-Wing queue implementation.
     * [proofs/POPL24_HerlihyWingQueuePrelude.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_HerlihyWingQueue.tla) contains TLAPS proofs for a number of lemmas used in the proof of linearizability of the Herlihy-Wing queue implementation.
-* [proofs/POPL24_JayantiTarjanUnionFind.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_JayantiTarjanUnionFind.tla) contains the TLAPS proof for the strong linearizability of the Jayanti-Tarjan union-find object implementation.
+* [proofs/POPL24_JayantiTarjanUF.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_JayantiTarjanUF.tla) contains the TLAPS proof for the strong linearizability of the Jayanti-Tarjan union-find object implementation.
 
 ## Installation
 
@@ -72,8 +72,8 @@ The first two commands will verify the prelude, which contains a number of lemma
 To verify the TLAPS proof of the strong linearizability of the Jayanti-Tarjan union-find object, run the following set of commands:
 
 ```bash
-tlapm POPL24_JayantiTarjanUnionFind.tla --summary
-tlapm POPL24_JayantiTarjanUnionFind.tla --timing --safefp --stretch 3
+tlapm POPL24_JayantiTarjanUF.tla --summary
+tlapm POPL24_JayantiTarjanUF.tla --timing --safefp --stretch 3
 ```
 
 ## Evaluation
@@ -85,4 +85,4 @@ If all of the above commands succeed, then the proofs are verified. The followin
 | POPL24_Jayanti_SS_Snapshot.tla | 1216 | 7.5s | 13s |
 | POPL24_HerlihyWingQueuePrelude.tla | 463 | 14s | 33s |
 | POPL24_HerlihyWingQueue.tla | 2496 | 137s | 214s |
-| JayantiTarjanUnionFind.tla | 3736 | 178s | 244s |
+| POPL24_JayantiTarjanUF.tla | 3736 | 178s | 244s |
