@@ -7,7 +7,7 @@ and these proofs are available in this artifact package, which we provide as a D
 
 * [proofs/POPL24_Jayanti_SS_Snapshot.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_Jayanti_SS_Snapshot.tla) contains the TLAPS proof for the linearizability of the Jayanti single-scanner snapshot implementation.
 * [proofs/POPL24_HerlihyWingQueue.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_HerlihyWingQueue.tla) contains the TLAPS proof for the linearizability of the Herlihy-Wing queue implementation.
-    * [proofs/POPL24_HerlihyWingQueuePrelude.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_HerlihyWingQueue.tla) contains TLAPS proofs for a number of lemmas used in the proof of linearizability of the Herlihy-Wing queue implementation.
+    * [proofs/POPL24_HerlihyWingQueuePrelude.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_HerlihyWingQueuePrelude.tla) contains TLAPS proofs for a number of lemmas used in the proof of linearizability of the Herlihy-Wing queue implementation.
 * [proofs/POPL24_JayantiTarjanUF.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_JayantiTarjanUF.tla) contains the TLAPS proof for the strong linearizability of the Jayanti-Tarjan union-find object implementation.
 
 ## Installation
