@@ -4,27 +4,33 @@ Authors: Prasad Jayanti, Siddhartha Jayanti, Uğur Y. Yavuz, Lizzie Hernández V
 Date: 2023-10-07
 
 This is the TLA+ specification of Jayanti-Tarjan concurrent union-find
-algorithm [Jayanti & Tarjan, 2021] with any-try splitting; and its proof
-of linearizability in TLAPS, using the tracking technique as described in our work
-"A Universal, Sound, and Complete Forward Reasoning Technique for
+algorithm [Jayanti & Tarjan, 2016; Jayanti & Tarjan, 2021] with any-try splitting
+(a generalized version of two-try splitting described in the 2021 paper); 
+and its proof of linearizability in TLAPS, using the tracking technique as 
+described in our work "A Universal, Sound, and Complete Forward Reasoning Technique for
 Machine-Verified Proofs of Linearizability", to appear in POPL 2024.
 Specficially, it corresponds to the partial tracker described in
 the Appendix.
+
+[Jayanti & Tarjan, 2016]
+Siddhartha V. Jayanti & Robert E. Tarjan, 2016. 
+"A Randomized Concurrent Algorithm for Disjoint Set Union." 
+In Proceedings of the 2016 ACM Symposium on Principles of Distributed Computing (PODC '16). 
+Association for Computing Machinery, New York, NY, USA, 75–82. https://doi.org/10.1145/2933057.2933108
 
 [Jayanti & Tarjan, 2021] 
 Siddhartha V. Jayanti & Robert E. Tarjan, 2021.
 "Concurrent disjoint set union."
 Distrib. Comput. 34, 413–436 (2021). https://doi.org/10.1007/s00446-020-00388-x
 
-\* This file relies on lemmas proven in the file POPL24_HerlihyWingQueuePrelude.tla.
-
 FILE OUTLINE:
-    \* - Lines 78-93: Preliminary definitions
-    \* - Lines 93-254: Specification
-    \* - Lines 254-414: Type-correctness and proof of type-correctness
-    \* - Lines 414-524: Remaining invariants
-    \* - Lines 524-1744: Proof of inductive invariance
-    \* - Lines 1744-1746: Proof of linearizability (immediate from the proof above)
+    - Lines 89-110: Preliminary definitions
+    - Lines 110-372: Specification
+    - Lines 372-511: Type-correctness and proof of type-correctness
+    - Lines 511-801: Remaining invariants and related lemmas
+    - Lines 801-4727: Proof of inductive invariance
+    - Lines 4727-4731: Proof of linearizability (immediate from the proof above)
+    - Lines 4731-4963: Proof of strong linearizability
 
 TYPE:
     - Find(x) returns the maximum element in element x’s part of the partition.
