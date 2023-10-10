@@ -10,12 +10,20 @@ and these proofs are available in this artifact package, which we provide as a D
     * [proofs/POPL24_HerlihyWingQueuePrelude.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_HerlihyWingQueuePrelude.tla) contains TLAPS proofs for a number of lemmas used in the proof of linearizability of the Herlihy-Wing queue implementation.
 * [proofs/POPL24_JayantiTarjanUF.tla](https://github.com/uguryavuz/machine-certified-linearizability/blob/main/proofs/POPL24_JayantiTarjanUF.tla) contains the TLAPS proof for the strong linearizability of the Jayanti-Tarjan union-find object implementation.
 
+The artifact is available both on [GitHub](https://github.com/uguryavuz/machine-certified-linearizability.git) and on [Zenodo](https://zenodo.org/record/8423903).
+
 ## Installation
 
 The artifact is provided as a Docker image. To install Docker, please follow the instructions at https://docs.docker.com/get-docker/. Once Docker is installed and the Docker daemon is running, you can create the Docker image and run the container as follows:
 
 ```bash
+# If downloading from GitHub
 git clone https://github.com/uguryavuz/machine-certified-linearizability.git
+
+# If downloading from Zenodo
+wget https://zenodo.org/record/8423903/files/machine-certified-linearizability.zip
+unzip machine-certified-linearizability.zip
+
 cd machine-certified-linearizability/docker
 docker build -t tlaps-artifact-img .
 docker run -it --name tlaps-artifact-cont --platform linux/amd64 tlaps-artifact-img
