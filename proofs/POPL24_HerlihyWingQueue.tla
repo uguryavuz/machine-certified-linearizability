@@ -20,9 +20,9 @@ This file relies on lemmas proven in the file POPL24_HerlihyWingQueuePrelude.tla
 FILE OUTLINE:
     - Lines 69-130: Preliminary definitions and lemmas
     - Lines 130-286: Specification
-    - Lines 286-377: Type-correctness and proof of type-correctness
-    - Lines 377-468: Remaining invariants
-    - Lines 467-568: Proof that invariants imply linearizability
+    - Lines 286-376: Type-correctness and proof of type-correctness
+    - Lines 376-469: Remaining invariants
+    - Lines 469-568: Proof that invariants imply linearizability
     - Lines 568-2799: Proof of inductive invariance
     - Lines 2799-2801: Proof of linearizability (immediate from the two proofs above)
 
