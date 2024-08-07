@@ -89,7 +89,10 @@ LEMMA NextPTypeOK == PTypeOK /\ [Next]_vars => PTypeOK'
         PROVE  PTypeOK'
     BY <1>7 DEF L6, Evolve, Filter
   <1>8. CASE UNCHANGED vars
-    BY <1>8 DEF vars
+    <2>1. UNCHANGED P
+      BY Z3T(30), <1>8 DEF vars, algvars
+    <2> QED
+      BY ZenonT(30), <2>1
   <1> QED
     BY <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7, <1>8 
        DEF Next, IntLine, IntLines, RetLine, RetLines
@@ -161,7 +164,28 @@ LEMMA NextTypeOK == TypeOK /\ [Next]_vars => TypeOK'
         PROVE  TypeOK'
     BY <1>7 DEF L6, Evolve, Filter
   <1>8. CASE UNCHANGED vars
-    BY <1>8 DEF vars
+    <2>1. PTypeOK'
+      BY <1>8 DEF vars
+    <2>2. (A \in [Nat -> EltDomain \union {BOT}])'
+      BY <1>8 DEF vars
+    <2>3. (L \in Nat)'
+      BY <1>8 DEF vars
+    <2>4. (l \in [ProcSet -> Nat])'
+      BY <1>8 DEF vars
+    <2>5. (j \in [ProcSet -> Nat])'
+      BY <1>8 DEF vars
+    <2>6. (v \in [ProcSet -> EltDomain \union {BOT}])'
+      BY <1>8 DEF vars
+    <2>7. (\A p \in ProcSet : pc[p] = "L6" => v[p] # BOT)'
+      BY <1>8 DEF vars
+    <2>8. (arg \in [ProcSet -> EltDomain])'
+      BY <1>8 DEF vars
+    <2>9. (ret \in [ProcSet -> RetDomain])'
+      BY <1>8 DEF vars
+    <2>10. (pc \in [ProcSet -> LineIDs])'
+      BY <1>8 DEF vars
+    <2>11. QED
+      BY <2>1, <2>10, <2>2, <2>3, <2>4, <2>5, <2>6, <2>7, <2>8, <2>9 DEF TypeOK
   <1> QED
     BY <1>1, <1>2, <1>3, <1>4, <1>5, <1>6, <1>7, <1>8 
        DEF Next, IntLine, IntLines, RetLine, RetLines
@@ -365,7 +389,7 @@ THEOREM Spec => []Inv
       <3>3. ASSUME NEW p \in ProcSet,
                    L2(p)
             PROVE  Inv0'
-        BY <3>3 DEF L2
+        BY Z3T(30), <3>3 DEF L2
       <3>4. ASSUME NEW p \in ProcSet,
                    L3(p)
             PROVE  Inv0'
@@ -382,7 +406,7 @@ THEOREM Spec => []Inv
         <4>2. CASE (j[p] # l[p] /\ A[j[p]] = BOT)
           BY <3>6, <4>2, Zenon DEF L5, TypeOK
         <4>3. CASE (j[p] # l[p] /\ A[j[p]] # BOT)
-          BY <3>6, <4>3, Zenon DEF L5, TypeOK
+          BY ZenonT(40), <3>6, <4>3 DEF L5, TypeOK
         <4> QED
           BY <4>1, <4>2, <4>3
       <3>7. ASSUME NEW p \in ProcSet,
@@ -390,7 +414,7 @@ THEOREM Spec => []Inv
             PROVE  Inv0'
         BY <3>7, FS_Subset DEF L6
       <3>8. CASE UNCHANGED vars
-        BY <3>8 DEF vars, algvars
+        BY Z3T(40), <3>8 DEF vars, algvars
       <3>9. QED
         BY <3>1, <3>2, <3>3, <3>4, <3>5, <3>6, <3>7, <3>8 DEF Next, IntLine, IntLines, RetLine, RetLines
     <2>3. Inv1'
@@ -665,7 +689,7 @@ THEOREM Spec => []Inv
         <4>6. c_prev \in ConfigDomain
           BY <3>2 DEF TypeOK, ConfigDomain, OpDomain, ArgDomain, ResDomain
         <4>7. c_prev.state = [i \in 1..Len(alpha) |-> Val(alpha[i])]
-          BY <4>4 DEF Val, OpNames, OpToInvocLine, TypeOK
+          BY Z3T(40), <4>4 DEF Val, OpNames, OpToInvocLine, TypeOK
         <4>8. WellFormed(c_prev, IdxSet)
           <5> USE DEF OpNames, OpToInvocLine, TypeOK
           <5> SUFFICES ASSUME NEW q \in ProcSet
@@ -1124,7 +1148,7 @@ THEOREM Spec => []Inv
             <6>7. alpha[z] \in Nat
               BY <6>6 DEF TypeOK
             <6>8. PICK q \in ProcSet : pc'[q] = "L5" /\ alpha[k] < l'[q] /\ alpha[z] < j'[q]
-              BY <4>2, <5>3, <6>2, <6>3, <6>7 DEF Justified
+              BY Z3T(30), <4>2, <5>3, <6>2, <6>3, <6>7 DEF Justified
             <6>9. l'[q] <= L
               BY <2>5, <6>8 DEF Inv3
             <6>10. alpha[k] < L
@@ -1175,25 +1199,33 @@ THEOREM Spec => []Inv
             <6>4. \A n \in 1..k-1 : alpha[n] # l'[p]
               BY <4>2, <5>3 DEF Perm
             <6>5. IdxSet_prev \in SUBSET 0..l'[p]-1
-              BY <6>3, <6>4 DEF TypeOK
+              BY Z3T(30), <6>3, <6>4 DEF TypeOK
             <6> QED
               BY <6>5 DEF TypeOK
           <5>7. \A m \in IdxSet_prev : Val(m) # BOT
             <6> SUFFICES ASSUME NEW m \in IdxSet_prev, A[m] = BOT
                          PROVE  Val(m) # BOT
               BY Zenon DEF Val
-            <6>1. PICK q \in ProcSet : pc'[q] = "L2" /\ l'[q] = m
-              BY <4>1, <4>2, Z3T(30) DEF Val, Perm
-            <6>2. q # p
-              BY <5>6, <6>1 DEF TypeOK
-            <6>3. pc[q] = "L2" /\ l[q] = m
-              BY <6>1, <6>2
-            <6>A. \A r \in ProcSet : (pc[r] = "L2" /\ l[r] = m) <=> (r = q)
-              BY <6>3 DEF Inv2
-            <6>4. Val(m) = arg[q]
-              BY <6>1, <6>3, <6>A DEF Val
+            <6>1. IdxSet_prev \in SUBSET IdxSet
+              BY <4>2 DEF Perm
+            <6>2. m \in IdxSet
+              BY <6>1
+            <6>3. Val(m)' # BOT
+              BY <4>1, <6>2
+            <6>4. A'[m] = BOT
+              BY Z3T(10)
+            <6>5. PICK q \in ProcSet : pc'[q] = "L2" /\ l'[q] = m
+              BY <6>3, <6>4 DEF Val
+            <6>6. q # p
+              BY <5>6, <6>5 DEF TypeOK
+            <6>7. pc[q] = "L2" /\ l[q] = m
+              BY <6>5, <6>6
+            <6>8. \A r \in ProcSet : (pc[r] = "L2" /\ l[r] = m) <=> (r = q)
+              BY <6>7 DEF Inv2
+            <6>9. Val(m) = arg[q]
+              BY <6>5, <6>7, <6>8 DEF Val
             <6> QED
-              BY BotDef, <6>4 DEF TypeOK
+              BY BotDef, <6>9 DEF TypeOK
           <5>8. \A m \in 0..(L-1) : A[m] # BOT => m \in IdxSet_prev
             <6> SUFFICES ASSUME NEW m \in 0..(L-1), A[m] # BOT
                          PROVE  m \in IdxSet_prev
@@ -1215,7 +1247,7 @@ THEOREM Spec => []Inv
               <7>1. \A z \in 1..k-1 : alpha[z] \in IdxSet_prev
                 OBVIOUS
               <7> QED
-                BY <7>1, <6>0 DEF Seq
+                BY <7>1, <6>0, Z3T(30) DEF Seq
             <6>2. Len(alpha_prev) = k-1
               OBVIOUS
             <6>3. Cardinality(IdxSet_prev) = k-1
@@ -1223,7 +1255,7 @@ THEOREM Spec => []Inv
                 <8> SUFFICES ASSUME NEW a \in 1..k-1, NEW b \in 1..k-1,
                                     alpha_prev[a] = alpha_prev[b]
                              PROVE  a = b
-                  BY <6>0, Zenon DEF Injection
+                  BY <6>0, ZenonT(30) DEF Injection, IsInjective \* IsInjective is needed in tlapm release 1.5.0
                 <8> QED
                   BY <4>2 DEF Perm, SubSeq
               <7>2. alpha_prev \in Surjection(1..k-1, IdxSet_prev)
@@ -1484,7 +1516,7 @@ THEOREM Spec => []Inv
               <7>2. Val(alpha[x+(k-1)])' # BOT /\ Val(alpha[y+(k-1)])' # BOT
                 BY <4>1, <7>1, Zenon
               <7>3. A[alpha[x+(k-1)]] = BOT /\ A[alpha[y+(k-1)]] = BOT
-                BY <5>4
+                BY <5>4, Z3T(30)
               <7>4. PICK q \in ProcSet : pc'[q] = "L2" /\ l'[q] = alpha[x+(k-1)]
                 BY <7>2, <7>3 DEF Val, TypeOK 
               <7>5. PICK z \in ProcSet : pc'[z] = "L2" /\ l'[z] = alpha[y+(k-1)]
@@ -1502,13 +1534,15 @@ THEOREM Spec => []Inv
             <6>1. Len(pseq) = Cardinality(pset)
               <7>1. Len(pseq) = Len(alpha)-(k-1)
                 OBVIOUS
+              <7> HIDE DEF pseq, pset
               <7>2. pseq \in [1..Len(alpha)-(k-1) -> pset]
-                BY <5>17 DEF Seq
+                BY <5>17, <6>2 DEF Seq
+              <7> USE DEF pseq, pset
               <7>3. pseq \in Injection(1..Len(alpha)-(k-1), pset)
                 <8> SUFFICES ASSUME NEW a \in 1..Len(alpha)-(k-1), NEW b \in 1..Len(alpha)-(k-1),
                                     a # b
                              PROVE  pseq[a] # pseq[b]
-                  BY <7>2, Zenon DEF Injection
+                  BY <7>2, ZenonT(30) DEF Injection, IsInjective
                 <8> QED
                   BY <7>1, <6>3, Zenon
               <7>4. pseq \in Surjection(1..Len(alpha)-(k-1), pset)
@@ -1554,11 +1588,11 @@ THEOREM Spec => []Inv
                                 /\ bseq[i+1].res = [bseq[i].res EXCEPT ![pseq[i]] = ACK]
               BY Zenon
             <6>1. bseq[i+1].state = bseq[i].state \o <<arg[pseq[i]]>>
-              <7> HIDE DEF pseq
+              <7> HIDE DEF pseq, pset, c_prev, IdxSet_prev
               <7>1. bseq[i+1].state = c_prev.state \o [z \in 1..i |-> arg[pseq[z]]]
                 BY Z3T(30)
               <7>2. bseq[i].state = c_prev.state \o [z \in 1..i-1 |-> arg[pseq[z]]]
-                BY Z3T(30)
+                BY Z3T(30) DEF c_prev
               <7> HIDE DEF bseq, pseq, c_prev
               <7>3. Len(bseq[i+1].state) = Len(c_prev.state) + i
                 BY <7>1
@@ -1749,7 +1783,6 @@ THEOREM Spec => []Inv
             <6>20. arg[pseq[i]] \in EltDomain
               BY <6>6 DEF TypeOK
             <6>21. bseq[i+1].state = bseq[i].state \o <<arg[pseq[i]]>>
-\*              BY <6>19, <6>24, Zenon
               BY <5>19, Zenon
             <6>22. bseq[i+1].state = Append(bseq[i].state, arg[pseq[i]])
               BY <6>19, <6>20, <6>21, AppendIsConcat, Isa
@@ -2623,9 +2656,32 @@ THEOREM Spec => []Inv
             BY <5>15
         <4>4. CASE (j[p] # l[p] /\ A[j[p]] = BOT)
           <5> USE <4>4
+          <5>100. \A m \in IdxSet : Val(m) # BOT
+            <6> SUFFICES ASSUME NEW m \in IdxSet
+                         PROVE  Val(m) # BOT
+              OBVIOUS
+            <6>1. Val(m)' # BOT
+              BY <4>1
+            <6>2. A'[m] # BOT \/ (A'[m] = BOT /\ \E q \in ProcSet : pc'[q] = "L2" /\ l'[q] = m)
+              BY <6>1 DEF Val
+            <6>3. CASE A'[m] # BOT
+              BY <6>3 DEF TypeOK, Val
+            <6>4. CASE A'[m] = BOT /\ (\E q \in ProcSet : pc'[q] = "L2" /\ l'[q] = m)
+              <7> PICK q \in ProcSet : pc'[q] = "L2" /\ l'[q] = m
+                BY <6>4
+              <7>1. pc[q] = "L2" /\ l[q] = m
+                BY DEF TypeOK 
+              <7>2. A[l[q]] = BOT
+                BY <6>4, <7>1 DEF TypeOK
+              <7> QED
+                BY <7>1, <7>2, BotDef DEF TypeOK, Val
+            <6> QED
+              BY <6>2, <6>3, <6>4
+          <5>99. \A m \in 0..(L-1) : A[m] # BOT => m \in IdxSet
+            BY <4>1, BotDef DEF TypeOK, Val
           <5>1. /\ \A m \in IdxSet : Val(m) # BOT
                 /\ \A m \in 0..(L-1) : A[m] # BOT => m \in IdxSet
-            BY <4>1 DEF Val, TypeOK
+            BY <5>100, <5>99
           <5>2. Justified(alpha)
             <6> SUFFICES ASSUME NEW m \in 1..Len(alpha), NEW n \in 1..Len(alpha),
                                 m < n
@@ -2761,7 +2817,7 @@ THEOREM Spec => []Inv
                                       /\ beta_[n_+1] = c
               BY <4>1 DEF Evolve
             <6> QED
-              BY Zenon, <5>6, <5>7, <5>8, <5>9, <5>10, <5>11, <5>12, <5>13, <5>14
+              BY ZenonT(30), <5>6, <5>7, <5>8, <5>9, <5>10, <5>11, <5>12, <5>13, <5>14
           <5> QED
             BY <5>15
         <4>5. CASE (j[p] # l[p] /\ A[j[p]] # BOT)
@@ -3547,498 +3603,339 @@ THEOREM Spec => []Inv
     <2>9. Lin2'
       <3> SUFFICES S' # {}
         BY DEF Lin2
-      <3>1. ASSUME NEW p \in ProcSet, L0(p)
-            PROVE  S' # {}
-        <4> USE <3>1 DEF L0
-        <4>1. CASE pc'[p] = "L1"
-          <5> USE <4>1 DEF algvars, TypeOK
-          <5>1. PICK p_op \in OpNames : /\ pc' = [pc EXCEPT ![p] = OpToInvocLine(p_op)]
-                                        /\ \E arg_val \in ArgsOf(p_op) : 
-                                           /\ IF arg_val # BOT 
-                                                 THEN arg' = [arg EXCEPT ![p] = arg_val]
-                                                 ELSE arg' = arg  
-                                           /\ P' = Evolve(Invoke(P, p, p_op, arg_val))
-            BY Zenon
-          <5>2. p_op = "ENQ"
-            BY <5>1 DEF OpToInvocLine, ArgsOf
-          <5>3. PICK p_arg \in ArgsOf("ENQ") : /\ IF p_arg # BOT 
-                                                     THEN arg' = [arg EXCEPT ![p] = p_arg]
-                                                     ELSE arg' = arg  
-                                               /\ P' = Evolve(Invoke(P, p, p_op, p_arg))
-            BY <5>1, <5>2 DEF ArgsOf
-          <5>4. p_arg \in EltDomain
-            BY <5>3 DEF ArgsOf
-          <5> DEFINE IdxSet == {i \in 0..(L-1) : A[i] # BOT}
-          <5>5. \A m \in IdxSet : Val(m) # BOT
-            BY DEF Val
-          <5>6. \A m \in 0..(L-1) : A[m] # BOT => m \in IdxSet
-            OBVIOUS
-          <5>7. IdxSet \in SUBSET Int
-            OBVIOUS
-          <5>8. IsFiniteSet(0..(L-1))
-            BY FS_Interval
-          <5>9. IsFiniteSet(IdxSet)
-            BY <5>8, FS_Subset
-          <5>10. PICK alpha \in Perm(IdxSet) : \A m, n \in 1..Len(alpha) : m < n => alpha[m] < alpha[n]
-            BY <5>7, <5>9, FS_SortedPermutation, Zenon
-          <5>11. Justified(alpha)'
-            BY <5>10 DEF Justified
-          <5> DEFINE val == [i \in 1..Len(alpha) |-> Val(alpha[i])]
-          <5>12. \A i \in 1..Len(alpha) : val[i] \in EltDomain
-            BY DEF Val, Perm
-          <5>13. val \in StateDomain
-            BY <5>12 DEF Perm, StateDomain
-          <5> DEFINE op == [q \in ProcSet |-> CASE pc[q] = "L0" /\ q # p -> BOT
-                                                [] pc[q] = "L0" /\ q = p -> "ENQ"
-                                                [] pc[q] = "L1"          -> "ENQ"
-                                                [] pc[q] = "L2"          -> "ENQ"
-                                                [] pc[q] = "L3"          -> "ENQ"
-                                                [] pc[q] = "L4"          -> "DEQ"
-                                                [] pc[q] = "L5"          -> "DEQ"
-                                                [] pc[q] = "L6"          -> "DEQ"]
-          <5>14. op \in [ProcSet -> OpDomain]
-            BY DEF OpDomain
-          <5> DEFINE carg == [q \in ProcSet |-> CASE pc[q] = "L0" /\ q # p -> BOT
-                                                  [] pc[q] = "L0" /\ q = p -> p_arg
-                                                  [] pc[q] = "L1"          -> arg[q]
-                                                  [] pc[q] = "L2"          -> arg[q]
-                                                  [] pc[q] = "L3"          -> arg[q]
-                                                  [] pc[q] = "L4"          -> BOT
-                                                  [] pc[q] = "L5"          -> BOT
-                                                  [] pc[q] = "L6"          -> BOT]
-          <5>15. carg \in [ProcSet -> ArgDomain]
-            BY <5>4 DEF ArgDomain
-          <5> DEFINE res == [q \in ProcSet |-> CASE pc[q] = "L0" /\ q # p -> BOT
-                                                 [] pc[q] = "L0" /\ q = p -> BOT
-                                                 [] pc[q] = "L1"          -> BOT
-                                                 [] pc[q] = "L2" /\ l[q] \notin IdxSet -> BOT
-                                                 [] pc[q] = "L2" /\ l[q] \in IdxSet    -> ACK
-                                                 [] pc[q] = "L3"          -> ACK
-                                                 [] pc[q] = "L4"          -> BOT
-                                                 [] pc[q] = "L5"          -> BOT
-                                                 [] pc[q] = "L6"          -> v[q]]
-          <5>16. res \in [ProcSet -> ResDomain]
-            BY DEF ResDomain
-          <5> DEFINE c == [state |-> val, op |-> op, arg |-> carg, res |-> res]
-          <5> DEFINE WF0(q) == c.op[q] = BOT /\ c.arg[q] = BOT /\ c.res[q] = BOT
-          <5> DEFINE WF1(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = BOT
-          <5> DEFINE WF2A(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = BOT
-          <5> DEFINE WF2B(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = ACK
-          <5> DEFINE WF3(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = ACK
-          <5> DEFINE WF4(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = BOT
-          <5> DEFINE WF5(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = BOT
-          <5> DEFINE WF6(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = v[q]
-          <5>17. c \in ConfigDomain
-            BY <5>13, <5>14, <5>15, <5>16 DEF ConfigDomain
-          <5>18. WellFormed(c, IdxSet)' = \A q \in ProcSet : 
-                   (CASE pc'[q] = "L0" -> WF0(q)'
-                      [] pc'[q] = "L1" -> WF1(q)'
-                      [] pc'[q] = "L2" /\ l'[q] \notin IdxSet -> WF2A(q)'
-                      [] pc'[q] = "L2" /\ l'[q] \in IdxSet    -> WF2B(q)'
-                      [] pc'[q] = "L3" -> WF3(q)'
-                      [] pc'[q] = "L4" -> WF4(q)'
-                      [] pc'[q] = "L5" -> WF5(q)'
-                      [] pc'[q] = "L6" -> WF6(q)')
-            BY Z3T(30) DEF WellFormed
-          <5>19. WellFormed(c, IdxSet)'
-            <6> SUFFICES ASSUME NEW q \in ProcSet
-                         PROVE  CASE pc'[q] = "L0" -> WF0(q)'
-                                  [] pc'[q] = "L1" -> WF1(q)'
-                                  [] pc'[q] = "L2" /\ l'[q] \notin IdxSet -> WF2A(q)'
-                                  [] pc'[q] = "L2" /\ l'[q] \in IdxSet    -> WF2B(q)'
-                                  [] pc'[q] = "L3" -> WF3(q)'
-                                  [] pc'[q] = "L4" -> WF4(q)'
-                                  [] pc'[q] = "L5" -> WF5(q)'
-                                  [] pc'[q] = "L6" -> WF6(q)'
-              BY <5>18, Zenon DEF WellFormed
-            <6>1. CASE pc'[q] = "L0"
-              BY <6>1, Zenon
-            <6>2. CASE pc'[q] = "L1"
-              BY <6>2, Zenon
-            <6>3. CASE pc'[q] = "L2" /\ l'[q] \notin IdxSet
-              BY <6>3, Zenon
-            <6>4. CASE pc'[q] = "L2" /\ l'[q] \in IdxSet
-              BY <6>4, Zenon
-            <6>5. CASE pc'[q] = "L3"
-              BY <6>5, Zenon
-            <6>6. CASE pc'[q] = "L4"
-              BY <6>6, Zenon
-            <6>7. CASE pc'[q] = "L5"
-              BY <6>7, Zenon
-            <6>8. CASE pc'[q] = "L6"
-              BY <6>8, Zenon
-            <6> QED
-              BY RemDef, <6>1, <6>2, <6>3, <6>4, <6>5, <6>6, <6>7, <6>8, ZenonT(15) DEF TypeOK
-          <5> SUFFICES c \in S'
-            OBVIOUS
-          <5> DEFINE Q(d, iset) == \E alph \in Perm(iset) : 
-                                        /\ Justified(alph)'
-                                        /\ d.state = [i \in 1..Len(alph) |-> Val(alph[i])]
-                                        /\ WellFormed(d, iset)'
-          <5>20. S' = {d \in ConfigDomain : 
-                          \E iset \in SUBSET 0..(L-1) :
-                              /\ \A m \in iset : Val(m) # BOT                  
-                              /\ \A m \in 0..(L-1) : A[m] # BOT => m \in iset  
-                              /\ Q(d, iset)}
-            BY DEF S, Val
-          <5>21. Q(c, IdxSet)
-            <6> SUFFICES /\ Justified(alpha)'
-                         /\ c.state = [i \in 1..Len(alpha) |-> Val(alpha[i])]
-                         /\ WellFormed(c, IdxSet)'
-              BY <5>10, Zenon
-            <6> QED
-              BY <5>11, <5>12, <5>19, Zenon
-          <5> HIDE DEF c, Q
-          <5> QED
-            BY <5>20, <5>5, <5>6, <5>17, <5>21
-        <4>2. CASE pc'[p] = "L4"
-          <5> USE <4>2 DEF algvars, TypeOK
-          <5>1. PICK p_op \in OpNames : /\ pc' = [pc EXCEPT ![p] = OpToInvocLine(p_op)]
-                                        /\ \E arg_val \in ArgsOf(p_op) : 
-                                           /\ IF arg_val # BOT 
-                                                 THEN arg' = [arg EXCEPT ![p] = arg_val]
-                                                 ELSE arg' = arg  
-                                           /\ P' = Evolve(Invoke(P, p, p_op, arg_val))
-            BY Zenon
-          <5>2. p_op = "DEQ"
-            BY <5>1 DEF OpToInvocLine, ArgsOf
-          <5>3. PICK p_arg \in ArgsOf("DEQ") : /\ IF p_arg # BOT 
-                                                     THEN arg' = [arg EXCEPT ![p] = p_arg]
-                                                     ELSE arg' = arg  
-                                               /\ P' = Evolve(Invoke(P, p, p_op, p_arg))
-            BY <5>1, <5>2 DEF ArgsOf
-          <5>4. p_arg = BOT
-            BY <5>3 DEF ArgsOf
-          <5> DEFINE IdxSet == {i \in 0..(L-1) : A[i] # BOT}
-          <5>5. \A m \in IdxSet : Val(m) # BOT
-            BY DEF Val
-          <5>6. \A m \in 0..(L-1) : A[m] # BOT => m \in IdxSet
-            OBVIOUS
-          <5>7. IdxSet \in SUBSET Int
-            OBVIOUS
-          <5>8. IsFiniteSet(0..(L-1))
-            BY FS_Interval
-          <5>9. IsFiniteSet(IdxSet)
-            BY <5>8, FS_Subset
-          <5>10. PICK alpha \in Perm(IdxSet) : \A m, n \in 1..Len(alpha) : m < n => alpha[m] < alpha[n]
-            BY <5>7, <5>9, FS_SortedPermutation, Zenon
-          <5>11. Justified(alpha)'
-            BY <5>10 DEF Justified
-          <5> DEFINE val == [i \in 1..Len(alpha) |-> Val(alpha[i])]
-          <5>12. \A i \in 1..Len(alpha) : val[i] \in EltDomain
-            BY DEF Val, Perm
-          <5>13. val \in StateDomain
-            BY <5>12 DEF Perm, StateDomain
-          <5> DEFINE op == [q \in ProcSet |-> CASE pc[q] = "L0" /\ q # p -> BOT
-                                                [] pc[q] = "L0" /\ q = p -> "ENQ"
-                                                [] pc[q] = "L1"          -> "ENQ"
-                                                [] pc[q] = "L2"          -> "ENQ"
-                                                [] pc[q] = "L3"          -> "ENQ"
-                                                [] pc[q] = "L4"          -> "DEQ"
-                                                [] pc[q] = "L5"          -> "DEQ"
-                                                [] pc[q] = "L6"          -> "DEQ"]
-          <5>14. op \in [ProcSet -> OpDomain]
-            BY DEF OpDomain
-          <5> DEFINE carg == [q \in ProcSet |-> CASE pc[q] = "L0" /\ q # p -> BOT
-                                                  [] pc[q] = "L0" /\ q = p -> p_arg
-                                                  [] pc[q] = "L1"          -> arg[q]
-                                                  [] pc[q] = "L2"          -> arg[q]
-                                                  [] pc[q] = "L3"          -> arg[q]
-                                                  [] pc[q] = "L4"          -> BOT
-                                                  [] pc[q] = "L5"          -> BOT
-                                                  [] pc[q] = "L6"          -> BOT]
-          <5>15. carg \in [ProcSet -> ArgDomain]
-            BY <5>4 DEF ArgDomain
-          <5> DEFINE res == [q \in ProcSet |-> CASE pc[q] = "L0" /\ q # p -> BOT
-                                                 [] pc[q] = "L0" /\ q = p -> BOT
-                                                 [] pc[q] = "L1"          -> BOT
-                                                 [] pc[q] = "L2" /\ l[q] \notin IdxSet -> BOT
-                                                 [] pc[q] = "L2" /\ l[q] \in IdxSet    -> ACK
-                                                 [] pc[q] = "L3"          -> ACK
-                                                 [] pc[q] = "L4"          -> BOT
-                                                 [] pc[q] = "L5"          -> BOT
-                                                 [] pc[q] = "L6"          -> v[q]]
-          <5>16. res \in [ProcSet -> ResDomain]
-            BY DEF ResDomain
-          <5> DEFINE c == [state |-> val, op |-> op, arg |-> carg, res |-> res]
-          <5> DEFINE WF0(q) == c.op[q] = BOT /\ c.arg[q] = BOT /\ c.res[q] = BOT
-          <5> DEFINE WF1(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = BOT
-          <5> DEFINE WF2A(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = BOT
-          <5> DEFINE WF2B(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = ACK
-          <5> DEFINE WF3(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = ACK
-          <5> DEFINE WF4(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = BOT
-          <5> DEFINE WF5(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = BOT
-          <5> DEFINE WF6(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = v[q]
-          <5>17. c \in ConfigDomain
-            BY <5>13, <5>14, <5>15, <5>16 DEF ConfigDomain
-          <5>18. WellFormed(c, IdxSet)' = \A q \in ProcSet : 
-                   (CASE pc'[q] = "L0" -> WF0(q)'
-                      [] pc'[q] = "L1" -> WF1(q)'
-                      [] pc'[q] = "L2" /\ l'[q] \notin IdxSet -> WF2A(q)'
-                      [] pc'[q] = "L2" /\ l'[q] \in IdxSet    -> WF2B(q)'
-                      [] pc'[q] = "L3" -> WF3(q)'
-                      [] pc'[q] = "L4" -> WF4(q)'
-                      [] pc'[q] = "L5" -> WF5(q)'
-                      [] pc'[q] = "L6" -> WF6(q)')
-            BY Z3T(30) DEF WellFormed
-          <5>19. WellFormed(c, IdxSet)'
-            <6> SUFFICES ASSUME NEW q \in ProcSet
-                         PROVE  CASE pc'[q] = "L0" -> WF0(q)'
-                                  [] pc'[q] = "L1" -> WF1(q)'
-                                  [] pc'[q] = "L2" /\ l'[q] \notin IdxSet -> WF2A(q)'
-                                  [] pc'[q] = "L2" /\ l'[q] \in IdxSet    -> WF2B(q)'
-                                  [] pc'[q] = "L3" -> WF3(q)'
-                                  [] pc'[q] = "L4" -> WF4(q)'
-                                  [] pc'[q] = "L5" -> WF5(q)'
-                                  [] pc'[q] = "L6" -> WF6(q)'
-              BY <5>18, Zenon DEF WellFormed
-            <6>1. CASE pc'[q] = "L0"
-              BY <6>1, Zenon
-            <6>2. CASE pc'[q] = "L1"
-              BY <6>2, Zenon
-            <6>3. CASE pc'[q] = "L2" /\ l'[q] \notin IdxSet
-              BY <6>3, Zenon
-            <6>4. CASE pc'[q] = "L2" /\ l'[q] \in IdxSet
-              BY <6>4, Zenon
-            <6>5. CASE pc'[q] = "L3"
-              BY <6>5, Zenon
-            <6>6. CASE pc'[q] = "L4"
-              BY <6>6, Zenon
-            <6>7. CASE pc'[q] = "L5"
-              BY <6>7, Zenon
-            <6>8. CASE pc'[q] = "L6"
-              BY <6>8, Zenon
-            <6> QED
-              BY RemDef, <6>1, <6>2, <6>3, <6>4, <6>5, <6>6, <6>7, <6>8, ZenonT(15) DEF TypeOK
-          <5> SUFFICES c \in S'
-            OBVIOUS
-          <5> DEFINE Q(d, iset) == \E alph \in Perm(iset) : 
-                                        /\ Justified(alph)'
-                                        /\ d.state = [i \in 1..Len(alph) |-> Val(alph[i])]
-                                        /\ WellFormed(d, iset)'
-          <5>20. S' = {d \in ConfigDomain : 
-                          \E iset \in SUBSET 0..(L-1) :
-                              /\ \A m \in iset : Val(m) # BOT                  
-                              /\ \A m \in 0..(L-1) : A[m] # BOT => m \in iset  
-                              /\ Q(d, iset)}
-            BY DEF S, Val
-          <5>21. Q(c, IdxSet)
-            <6> SUFFICES /\ Justified(alpha)'
-                         /\ c.state = [i \in 1..Len(alpha) |-> Val(alpha[i])]
-                         /\ WellFormed(c, IdxSet)'
-              BY <5>10, Zenon
-            <6> QED
-              BY <5>11, <5>12, <5>19, Zenon
-          <5> HIDE DEF c, Q
-          <5> QED
-            BY <5>20, <5>5, <5>6, <5>17, <5>21
+      <3> DEFINE op == [p \in ProcSet |-> CASE pc'[p] = "L0"          -> BOT
+                                            [] pc'[p] = "L1"          -> "ENQ"
+                                            [] pc'[p] = "L2"          -> "ENQ"
+                                            [] pc'[p] = "L3"          -> "ENQ"
+                                            [] pc'[p] = "L4"          -> "DEQ"
+                                            [] pc'[p] = "L5"          -> "DEQ"
+                                            [] pc'[p] = "L6"          -> "DEQ"]
+      <3>1. op \in [ProcSet -> OpDomain]
+        BY <2>1 DEF OpDomain, TypeOK
+      <3> DEFINE carg == [p \in ProcSet |-> CASE pc'[p] = "L0" -> BOT
+                                              [] pc'[p] = "L1" -> arg'[p]
+                                              [] pc'[p] = "L2" -> arg'[p]
+                                              [] pc'[p] = "L3" -> arg'[p]
+                                              [] pc'[p] = "L4" -> BOT
+                                              [] pc'[p] = "L5" -> BOT
+                                              [] pc'[p] = "L6" -> BOT]
+      <3>2. carg \in [ProcSet -> ArgDomain]
+        BY <2>1 DEF ArgDomain, TypeOK
+      <3> DEFINE res == [p \in ProcSet |-> CASE pc'[p] = "L0" -> BOT
+                                             [] pc'[p] = "L1" -> BOT
+                                             [] pc'[p] = "L2" -> BOT
+                                             [] pc'[p] = "L3" -> ACK
+                                             [] pc'[p] = "L4" -> BOT
+                                             [] pc'[p] = "L5" -> BOT
+                                             [] pc'[p] = "L6" -> v'[p]]
+      <3>3. res \in [ProcSet -> ResDomain]
+        BY <2>1 DEF ResDomain, TypeOK
+      <3> DEFINE full_indices == {idx \in 0..(L'-1) : A'[idx] # BOT}
+      <3>4. full_indices \in SUBSET 0..L'-1
+        OBVIOUS
+      <3>5. \A m \in full_indices : Val(m)' # BOT
+        BY DEF Val
+      <3>6. \A m \in 0..L'-1 : A'[m] # BOT => m \in full_indices
+        OBVIOUS
+      <3>7. full_indices \in SUBSET Int
+        OBVIOUS
+      <3>8. IsFiniteSet(0..L'-1)
+        BY NextTypeOK, FS_Interval DEF TypeOK
+      <3>9. IsFiniteSet(full_indices)
+        BY <3>8, FS_Subset, Zenon
+      <3>10. PICK alpha_ \in Perm(full_indices) : \A m, n \in 1..Len(alpha_) : m < n => alpha_[m] < alpha_[n]
+        BY <3>7, <3>9, FS_SortedPermutation, Zenon
+      <3>11. Justified(alpha_)'
+        BY <3>10 DEF Justified
+      <3> DEFINE val == [i \in 1..Len(alpha_) |-> Val(alpha_[i])']
+      <3> DEFINE poss == [state |-> val,
+                          op    |-> op,
+                          arg   |-> carg,
+                          res   |-> res]
+      <3> HIDE DEF full_indices, poss, op, carg, res, val
+      <3>12. poss \in ConfigDomain
+        <4> SUFFICES /\ poss.state \in StateDomain
+                     /\ poss.op \in [ProcSet -> OpDomain]
+                     /\ poss.arg \in [ProcSet -> ArgDomain]
+                     /\ poss.res \in [ProcSet -> ResDomain]
+          BY DEF ConfigDomain, poss
+        <4>1. \A i \in 1..Len(alpha_) : val[i] \in EltDomain
+          BY <3>10, NextTypeOK DEF Val, Perm, full_indices, val, TypeOK
+        <4>2. val \in StateDomain
+          BY <3>10, <4>1 DEF Perm, StateDomain, val
+        <4>3. poss.state \in StateDomain
+          BY <4>2 DEF poss
+        <4>4. poss.op \in [ProcSet -> OpDomain]
+          BY <3>1 DEF poss
+        <4>5. poss.arg \in [ProcSet -> ArgDomain]
+          BY <3>2 DEF poss
+        <4>6. poss.res \in [ProcSet -> ResDomain]
+          BY <3>3 DEF poss
         <4> QED
-          BY <4>1, <4>2 DEF OpNames, OpToInvocLine, TypeOK
-      <3>2. ASSUME NEW p \in ProcSet, L1(p)
-            PROVE  S' # {}
-\*        BY <3>2 DEF Inv2, L1, TypeOK, Inv1
-      <3>3. ASSUME NEW p \in ProcSet, L2(p)
-            PROVE  S' # {}
-\*        BY <3>3 DEF L2
-      <3>4. ASSUME NEW p \in ProcSet, L3(p)
-            PROVE  S' # {}
-\*        BY <3>4 DEF L3
-      <3>5. ASSUME NEW p \in ProcSet, L4(p)
-            PROVE  S' # {}
-\*        BY <3>5 DEF L4
-      <3>6. ASSUME NEW p \in ProcSet, L5(p)
-            PROVE  S' # {}
-        <4>1. CASE (j[p] = l[p])
-\*          BY <3>6, <4>1, Zenon DEF L5, TypeOK
-        <4>2. CASE (j[p] # l[p] /\ A[j[p]] = BOT)
-\*          BY <3>6, <4>2, Zenon DEF L5, TypeOK
-        <4>3. CASE (j[p] # l[p] /\ A[j[p]] # BOT)
-\*          BY <3>6, <4>3, Zenon DEF L5, TypeOK
-        <4> QED
-          BY <4>1, <4>2, <4>3
-      <3>7. ASSUME NEW p \in ProcSet, L6(p)
-            PROVE  S' # {}
-\*        BY <3>7 DEF L6
-      <3>8. CASE UNCHANGED vars
-        <4> USE <3>8 DEF vars, algvars, TypeOK
-        <4> DEFINE IdxSet == {i \in 0..(L-1) : A[i] # BOT}
-        <4>5. \A m \in IdxSet : Val(m) # BOT
-          BY DEF Val
-        <4>6. \A m \in 0..(L-1) : A[m] # BOT => m \in IdxSet
-          OBVIOUS
-        <4>7. IdxSet \in SUBSET Int
-          OBVIOUS
-        <4>8. IsFiniteSet(0..(L-1))
-          BY FS_Interval
-        <4>9. IsFiniteSet(IdxSet)
-          BY <4>8, FS_Subset
-        <4>10. PICK alpha \in Perm(IdxSet) : \A m, n \in 1..Len(alpha) : m < n => alpha[m] < alpha[n]
-          BY <4>7, <4>9, FS_SortedPermutation, Zenon
-        <4>11. Justified(alpha)'
-          BY <4>10 DEF Justified
-        <4> DEFINE val == [i \in 1..Len(alpha) |-> Val(alpha[i])]
-        <4>12. \A i \in 1..Len(alpha) : val[i] \in EltDomain
-          BY DEF Val, Perm
-        <4>13. val \in StateDomain
-          BY <4>12 DEF Perm, StateDomain
-        <4> DEFINE op == [q \in ProcSet |-> CASE pc[q] = "L0" -> BOT
-                                              [] pc[q] = "L1" -> "ENQ"
-                                              [] pc[q] = "L2" -> "ENQ"
-                                              [] pc[q] = "L3" -> "ENQ"
-                                              [] pc[q] = "L4" -> "DEQ"
-                                              [] pc[q] = "L5" -> "DEQ"
-                                              [] pc[q] = "L6" -> "DEQ"]
-        <4>14. op \in [ProcSet -> OpDomain]
-          BY DEF OpDomain
-        <4> DEFINE carg == [q \in ProcSet |-> CASE pc[q] = "L0" -> BOT
-                                                [] pc[q] = "L1" -> arg[q]
-                                                [] pc[q] = "L2" -> arg[q]
-                                                [] pc[q] = "L3" -> arg[q]
-                                                [] pc[q] = "L4" -> BOT
-                                                [] pc[q] = "L5" -> BOT
-                                                [] pc[q] = "L6" -> BOT]
-        <4>15. carg \in [ProcSet -> ArgDomain]
-          BY DEF ArgDomain
-        <4> DEFINE res == [q \in ProcSet |-> CASE pc[q] = "L0" -> BOT
-                                               [] pc[q] = "L1" -> BOT
-                                               [] pc[q] = "L2" /\ l[q] \notin IdxSet -> BOT
-                                               [] pc[q] = "L2" /\ l[q] \in IdxSet    -> ACK
-                                               [] pc[q] = "L3" -> ACK
-                                               [] pc[q] = "L4" -> BOT
-                                               [] pc[q] = "L5" -> BOT
-                                               [] pc[q] = "L6" -> v[q]]
-        <4>16. res \in [ProcSet -> ResDomain]
-          BY DEF ResDomain
-        <4> DEFINE c == [state |-> val, op |-> op, arg |-> carg, res |-> res]
-        <4> DEFINE WF0(q) == c.op[q] = BOT /\ c.arg[q] = BOT /\ c.res[q] = BOT
-        <4> DEFINE WF1(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = BOT
-        <4> DEFINE WF2A(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = BOT
-        <4> DEFINE WF2B(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = ACK
-        <4> DEFINE WF3(q) == c.op[q] = "ENQ" /\ c.arg[q] = arg[q] /\ c.res[q] = ACK
-        <4> DEFINE WF4(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = BOT
-        <4> DEFINE WF5(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = BOT
-        <4> DEFINE WF6(q) == c.op[q] = "DEQ" /\ c.arg[q] = BOT /\ c.res[q] = v[q]
-        <4>17. c \in ConfigDomain
-          BY <4>13, <4>14, <4>15, <4>16 DEF ConfigDomain
-        <4>18. WellFormed(c, IdxSet)' = \A q \in ProcSet : 
-                 (CASE pc'[q] = "L0" -> WF0(q)'
-                    [] pc'[q] = "L1" -> WF1(q)'
-                    [] pc'[q] = "L2" /\ l'[q] \notin IdxSet -> WF2A(q)'
-                    [] pc'[q] = "L2" /\ l'[q] \in IdxSet    -> WF2B(q)'
-                    [] pc'[q] = "L3" -> WF3(q)'
-                    [] pc'[q] = "L4" -> WF4(q)'
-                    [] pc'[q] = "L5" -> WF5(q)'
-                    [] pc'[q] = "L6" -> WF6(q)')
-          BY Z3T(30) DEF WellFormed
-        <4>19. WellFormed(c, IdxSet)'
-          <5>0. SUFFICES ASSUME NEW q \in ProcSet
-                         PROVE  CASE pc'[q] = "L0" -> WF0(q)'
-                                  [] pc'[q] = "L1" -> WF1(q)'
-                                  [] pc'[q] = "L2" /\ l'[q] \notin IdxSet -> WF2A(q)'
-                                  [] pc'[q] = "L2" /\ l'[q] \in IdxSet    -> WF2B(q)'
-                                  [] pc'[q] = "L3" -> WF3(q)'
-                                  [] pc'[q] = "L4" -> WF4(q)'
-                                  [] pc'[q] = "L5" -> WF5(q)'
-                                  [] pc'[q] = "L6" -> WF6(q)'
-            BY <4>18, Zenon DEF WellFormed
-          <5> DEFINE cases == CASE pc'[q] = "L0" -> WF0(q)'
-                                [] pc'[q] = "L1" -> WF1(q)'
-                                [] pc'[q] = "L2" /\ l'[q] \notin IdxSet -> WF2A(q)'
-                                [] pc'[q] = "L2" /\ l'[q] \in IdxSet    -> WF2B(q)'
-                                [] pc'[q] = "L3" -> WF3(q)'
-                                [] pc'[q] = "L4" -> WF4(q)'
-                                [] pc'[q] = "L5" -> WF5(q)'
-                                [] pc'[q] = "L6" -> WF6(q)'
-          <5> SUFFICES ASSUME TRUE 
-                       PROVE cases
-            BY Zenon
-          <5>1. CASE pc'[q] = "L0"
-            BY <5>1, Zenon
-          <5>2. CASE pc'[q] = "L1"
-            BY <5>2, Zenon
-          <5>3. CASE pc'[q] = "L2" /\ l'[q] \notin IdxSet
-            <6>1. cases = WF2A(q)'
-              BY <5>3
-            <6> HIDE DEF cases
-            <6>2. c.op[q] = "ENQ" /\ c.arg[q] = arg'[q] /\ c.res[q] = BOT
-              BY <5>3
-            <6>3. WF2A(q)'
-              BY <6>2
-            <6> QED  
-              BY <6>1, <6>3, Zenon
-          <5>4. CASE pc'[q] = "L2" /\ l'[q] \in IdxSet
-            <6>1. cases = WF2B(q)'
-              BY <5>4
-            <6> HIDE DEF cases
-            <6>2. c.op[q] = "ENQ" /\ c.arg[q] = arg'[q] /\ c.res[q] = ACK
-              BY <5>4
-            <6>3. WF2B(q)'
-              BY <6>2
-            <6> QED  
-              BY <6>1, <6>3, Zenon
-          <5>5. CASE pc'[q] = "L3"
-            BY <5>5, Zenon
-          <5>6. CASE pc'[q] = "L4"
-            BY <5>6, Zenon
-          <5>7. CASE pc'[q] = "L5"
-            BY <5>7, Zenon
-          <5>8. CASE pc'[q] = "L6"
-            BY <5>8, Zenon
-          <5> HIDE DEF cases
+          BY <4>3, <4>4, <4>5, <4>6
+      <3>13. \A c \in ConfigDomain : \A IdxSet \in SUBSET 0..L'-1 : 
+                 WellFormed(c, IdxSet)' = (\A p \in ProcSet : 
+                             CASE pc[p] = "L0" 
+                                    -> (c.op[p] = BOT /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                               [] pc[p] = "L1"
+                                    -> (c.op[p] = "ENQ" /\ c.arg[p] = arg[p] /\ c.res[p] = BOT)
+                               [] pc[p] = "L2" /\ l[p] \notin IdxSet
+                                    -> (c.op[p] = "ENQ" /\ c.arg[p] = arg[p] /\ c.res[p] = BOT)
+                               [] pc[p] = "L2" /\ l[p] \in IdxSet
+                                    -> (c.op[p] = "ENQ" /\ c.arg[p] = arg[p] /\ c.res[p] = ACK)
+                               [] pc[p] = "L3"
+                                    -> (c.op[p] = "ENQ" /\ c.arg[p] = arg[p] /\ c.res[p] = ACK)
+                               [] pc[p] = "L4"
+                                    -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                               [] pc[p] = "L5"
+                                    -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                               [] pc[p] = "L6"
+                                    -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = v[p]))'
+        BY DEF WellFormed
+      <3>14. \A c \in ConfigDomain : \A IdxSet \in SUBSET 0..L'-1 : 
+                 WellFormed(c, IdxSet)' = (\A p \in ProcSet : 
+                             CASE pc'[p] = "L0" 
+                                    -> (c.op[p] = BOT /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                               [] pc'[p] = "L1"
+                                    -> (c.op[p] = "ENQ" /\ c.arg[p] = arg'[p] /\ c.res[p] = BOT)
+                               [] pc'[p] = "L2" /\ l'[p] \notin IdxSet
+                                    -> (c.op[p] = "ENQ" /\ c.arg[p] = arg'[p] /\ c.res[p] = BOT)
+                               [] pc'[p] = "L2" /\ l'[p] \in IdxSet
+                                    -> (c.op[p] = "ENQ" /\ c.arg[p] = arg'[p] /\ c.res[p] = ACK)
+                               [] pc'[p] = "L3"
+                                    -> (c.op[p] = "ENQ" /\ c.arg[p] = arg'[p] /\ c.res[p] = ACK)
+                               [] pc'[p] = "L4"
+                                    -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                               [] pc'[p] = "L5"
+                                    -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                               [] pc'[p] = "L6"
+                                    -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = v'[p]))
+        BY DEF WellFormed
+      <3>15. (\A p \in ProcSet : 
+                             CASE pc'[p] = "L0" 
+                                    -> (poss.op[p] = BOT /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                               [] pc'[p] = "L1"
+                                    -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                               [] pc'[p] = "L2" /\ l'[p] \notin full_indices
+                                    -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                               [] pc'[p] = "L2" /\ l'[p] \in full_indices
+                                    -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                               [] pc'[p] = "L3"
+                                    -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                               [] pc'[p] = "L4"
+                                    -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                               [] pc'[p] = "L5"
+                                    -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                               [] pc'[p] = "L6"
+                                    -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = v'[p]))
+        <4> SUFFICES ASSUME NEW p \in ProcSet
+                     PROVE  CASE pc'[p] = "L0" -> (poss.op[p] = BOT /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L1" -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L2" /\ l'[p] \notin full_indices
+                                               -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L2" /\ l'[p] \in full_indices
+                                               -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                              [] pc'[p] = "L3" -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                              [] pc'[p] = "L4" -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L5" -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L6" -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = v'[p])
+          BY ZenonT(30) 
+        <4> DEFINE Obligation == CASE pc'[p] = "L0" -> (poss.op[p] = BOT /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                                   [] pc'[p] = "L1" -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                                   [] pc'[p] = "L2" /\ l'[p] \notin full_indices
+                                                    -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                                   [] pc'[p] = "L2" /\ l'[p] \in full_indices
+                                                    -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                                   [] pc'[p] = "L3" -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                                   [] pc'[p] = "L4" -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                                   [] pc'[p] = "L5" -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                                   [] pc'[p] = "L6" -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = v'[p])
+        <4> SUFFICES Obligation
+          OBVIOUS                                          
+        <4>1. CASE pc'[p] = "L0"
+          <5> SUFFICES poss.op[p] = BOT /\ poss.arg[p] = BOT /\ poss.res[p] = BOT
+            BY <4>1
+          <5>1. poss.op[p] = BOT
+            BY <4>1, Zenon DEF op, poss
+          <5>2. poss.arg[p] = BOT
+            BY <4>1, Zenon DEF carg, poss
+          <5>3. poss.res[p] = BOT
+            BY <4>1, Zenon DEF res, poss
           <5> QED
-            BY <5>1, <5>2, <5>3, <5>4, <5>5, <5>6, <5>7, <5>8, RemDef
-        <4> SUFFICES c \in S'
-          OBVIOUS
-\*        S == {c \in ConfigDomain : 
-\*        \E IdxSet \in SUBSET 0..(L-1) :
-\*            /\ \A m \in IdxSet : Val(m) # BOT
-\*            /\ \A m \in 0..(L-1) : A[m] # BOT => m \in IdxSet
-\*            /\ \E alpha \in Perm(IdxSet) : 
-\*               /\ Justified(alpha)
-\*               /\ c.state = [i \in 1..Len(alpha) |-> Val(alpha[i])]
-\*               /\ WellFormed(c, IdxSet)}
-        <4>A. S' = {d \in ConfigDomain : 
-                        \E iset \in SUBSET 0..(L'-1) :
-                            /\ \A m \in iset : Val(m)' # BOT                  
-                            /\ \A m \in 0..(L'-1) : A'[m] # BOT => m \in iset  
-                            /\ \E alph \in Perm(iset) : 
-                                /\ Justified(alph)'
-                                /\ d.state = [i \in 1..Len(alph) |-> Val(alph[i])']
-                                /\ WellFormed(d, iset)'}
-          BY DEF S
-        <4>B. L = L'
-          OBVIOUS
-        <4>C. S' = {d \in ConfigDomain : 
-                        \E iset \in SUBSET 0..(L-1) :
-                            /\ \A m \in iset : Val(m)' # BOT                  
-                            /\ \A m \in 0..(L-1) : A'[m] # BOT => m \in iset  
-                            /\ \E alph \in Perm(iset) : 
-                                /\ Justified(alph)'
-                                /\ d.state = [i \in 1..Len(alph) |-> Val(alph[i])']
-                                /\ WellFormed(d, iset)'}
-          BY <4>A, <4>B DEF Val
-        <4> DEFINE Q(d, iset) == \E alph \in Perm(iset) : 
-                                      /\ Justified(alph)'
-                                      /\ d.state = [i \in 1..Len(alph) |-> Val(alph[i])]
-                                      /\ WellFormed(d, iset)'
-        <4>20. S' = {d \in ConfigDomain : 
-                        \E iset \in SUBSET 0..(L-1) :
-                            /\ \A m \in iset : Val(m) # BOT                  
-                            /\ \A m \in 0..(L-1) : A[m] # BOT => m \in iset  
-                            /\ Q(d, iset)}
-          BY DEF S, Val
-        <4>21. Q(c, IdxSet)
-          <5> SUFFICES /\ Justified(alpha)'
-                       /\ c.state = [i \in 1..Len(alpha) |-> Val(alpha[i])]
-                       /\ WellFormed(c, IdxSet)'
-            BY <4>10, Zenon
+            BY <5>1, <5>2, <5>3
+        <4>2. CASE pc'[p] = "L1"
+          <5> SUFFICES poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT
+            BY <4>2
+          <5>1. poss.op[p] = "ENQ"
+            BY <4>2, Zenon DEF op, poss
+          <5>2. poss.arg[p] = arg'[p]
+            BY <4>2, Zenon DEF carg, poss
+          <5>3. poss.res[p] = BOT
+            BY <4>2, Zenon DEF res, poss
           <5> QED
-            BY <4>11, <4>12, <4>19, Zenon
-        <4> HIDE DEF c, Q
-        <4> QED
-          BY <4>20, <4>5, <4>6, <4>17, <4>21
-      <3>9. QED
-        BY <3>1, <3>2, <3>3, <3>4, <3>5, <3>6, <3>7, <3>8 DEF Next, IntLine, IntLines, RetLine, RetLines 
+            BY <5>1, <5>2, <5>3
+        <4>3. CASE pc'[p] = "L3"
+          <5> SUFFICES poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK
+            BY <4>3
+          <5>1. poss.op[p] = "ENQ"
+            BY <4>3, Zenon DEF op, poss
+          <5>2. poss.arg[p] = arg'[p]
+            BY <4>3, Zenon DEF carg, poss
+          <5>3. poss.res[p] = ACK
+            BY <4>3, Zenon DEF res, poss
+          <5> QED
+            BY <5>1, <5>2, <5>3
+        <4>4. CASE pc'[p] = "L4"
+          <5> SUFFICES poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT
+            BY <4>4
+          <5>1. poss.op[p] = "DEQ"
+            BY <4>4, Zenon DEF op, poss
+          <5>2. poss.arg[p] = BOT
+            BY <4>4, Zenon DEF carg, poss
+          <5>3. poss.res[p] = BOT
+            BY <4>4, Zenon DEF res, poss
+          <5> QED
+            BY <5>1, <5>2, <5>3
+        <4>5. CASE pc'[p] = "L5"
+          <5> SUFFICES poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT
+            BY <4>5
+          <5>1. poss.op[p] = "DEQ"
+            BY <4>5, Zenon DEF op, poss
+          <5>2. poss.arg[p] = BOT
+            BY <4>5, Zenon DEF carg, poss
+          <5>3. poss.res[p] = BOT
+            BY <4>5, Zenon DEF res, poss
+          <5> QED
+            BY <5>1, <5>2, <5>3
+        <4>6. CASE pc'[p] = "L6"
+          <5> SUFFICES poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = v'[p]
+            BY <4>6
+          <5>1. poss.op[p] = "DEQ"
+            BY <4>6, Zenon DEF op, poss
+          <5>2. poss.arg[p] = BOT
+            BY <4>6, Zenon DEF carg, poss
+          <5>3. poss.res[p] = v'[p]
+            BY <4>6, Zenon DEF res, poss
+          <5> QED
+            BY <5>1, <5>2, <5>3
+        <4>7. CASE pc'[p] = "L2"
+          <5>1. CASE l'[p] \notin full_indices
+            <6> SUFFICES poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT
+              BY <4>7, <5>1, Zenon
+            <6>1. poss.op[p] = "ENQ"
+              BY <4>7, Zenon DEF op, poss
+            <6>2. poss.arg[p] = arg'[p]
+              BY <4>7, Zenon DEF carg, poss
+            <6>3. poss.res[p] = BOT
+              BY <4>7, Zenon DEF res, poss
+            <6> QED
+              BY <6>1, <6>2, <6>3
+          <5>2. CASE l'[p] \in full_indices
+            <6> SUFFICES FALSE
+              OBVIOUS
+            <6>1. A'[l'[p]] # BOT
+              BY <5>2 DEF full_indices
+            <6>2. A'[l'[p]] = BOT
+              BY <2>7, <4>7 DEF InvE
+            <6> QED
+              BY <6>1, <6>2
+          <5> QED
+            BY <5>1, <5>2
+        <4> HIDE DEF Obligation
+        <4>8. pc'[p] \in {"L0", "L1", "L2", "L3", "L4", "L5", "L6"}
+          BY NextTypeOK DEF TypeOK
+        <4>9. QED
+          BY <4>1, <4>2, <4>3, <4>4, <4>5, <4>6, <4>7, <4>8                          
+      <3>16. S' = {c \in ConfigDomain :
+          (\E IdxSet \in SUBSET 0..L' - 1 :
+             /\ \A m \in IdxSet : Val(m)' # BOT
+             /\ \A m \in 0..L' - 1 : A'[m] # BOT => m \in IdxSet
+             /\ \E alpha \in Perm(IdxSet) :
+                   /\ Justified(alpha)'
+                   /\ c.state = [i \in 1..Len(alpha) |-> Val(alpha[i])']
+                   /\ WellFormed(c, IdxSet)')}
+        BY DEF S
+      <3>17. S' = {c \in ConfigDomain :
+          (\E IdxSet \in SUBSET 0..L' - 1 :
+             /\ \A m \in IdxSet : Val(m)' # BOT
+             /\ \A m \in 0..L' - 1 : A'[m] # BOT => m \in IdxSet
+             /\ \E alpha \in Perm(IdxSet) :
+                   /\ Justified(alpha)'
+                   /\ c.state = [i \in 1..Len(alpha) |-> Val(alpha[i])']
+                   /\ (\A p \in ProcSet : 
+                            CASE pc'[p] = "L0" 
+                                   -> (c.op[p] = BOT /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                              [] pc'[p] = "L1"
+                                   -> (c.op[p] = "ENQ" /\ c.arg[p] = arg'[p] /\ c.res[p] = BOT)
+                              [] pc'[p] = "L2" /\ l'[p] \notin IdxSet
+                                   -> (c.op[p] = "ENQ" /\ c.arg[p] = arg'[p] /\ c.res[p] = BOT)
+                              [] pc'[p] = "L2" /\ l'[p] \in IdxSet
+                                   -> (c.op[p] = "ENQ" /\ c.arg[p] = arg'[p] /\ c.res[p] = ACK)
+                              [] pc'[p] = "L3"
+                                   -> (c.op[p] = "ENQ" /\ c.arg[p] = arg'[p] /\ c.res[p] = ACK)
+                              [] pc'[p] = "L4"
+                                   -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                              [] pc'[p] = "L5"
+                                   -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = BOT)
+                              [] pc'[p] = "L6"
+                                   -> (c.op[p] = "DEQ" /\ c.arg[p] = BOT /\ c.res[p] = v'[p])))} 
+        BY <3>16, <3>14, ZenonT(30)
+      <3> SUFFICES poss \in S'
+        OBVIOUS
+      <3> SUFFICES 
+                \E IdxSet \in SUBSET 0..L' - 1 :
+                   /\ \A m \in IdxSet : Val(m)' # BOT
+                   /\ \A m \in 0..L' - 1 : A'[m] # BOT => m \in IdxSet
+                   /\ \E alpha \in Perm(IdxSet) :
+                      /\ Justified(alpha)'
+                      /\ poss.state = [i \in 1..Len(alpha) |-> Val(alpha[i])']
+                      /\ (\A p \in ProcSet : 
+                            CASE pc'[p] = "L0" 
+                                   -> (poss.op[p] = BOT /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L1"
+                                   -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L2" /\ l'[p] \notin IdxSet
+                                   -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L2" /\ l'[p] \in IdxSet
+                                   -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                              [] pc'[p] = "L3"
+                                   -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                              [] pc'[p] = "L4"
+                                   -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L5"
+                                   -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L6"
+                                   -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = v'[p]))
+        BY <3>12, <3>17, Zenon
+      <3> SUFFICES 
+                   /\ \A m \in full_indices : Val(m)' # BOT
+                   /\ \A m \in 0..L' - 1 : A'[m] # BOT => m \in full_indices
+                   /\ \E alpha \in Perm(full_indices) :
+                      /\ Justified(alpha)'
+                      /\ poss.state = [i \in 1..Len(alpha) |-> Val(alpha[i])']
+                      /\ (\A p \in ProcSet : 
+                            CASE pc'[p] = "L0" 
+                                   -> (poss.op[p] = BOT /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L1"
+                                   -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L2" /\ l'[p] \notin full_indices
+                                   -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L2" /\ l'[p] \in full_indices
+                                   -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                              [] pc'[p] = "L3"
+                                   -> (poss.op[p] = "ENQ" /\ poss.arg[p] = arg'[p] /\ poss.res[p] = ACK)
+                              [] pc'[p] = "L4"
+                                   -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L5"
+                                   -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = BOT)
+                              [] pc'[p] = "L6"
+                                   -> (poss.op[p] = "DEQ" /\ poss.arg[p] = BOT /\ poss.res[p] = v'[p]))
+        BY <3>4, Zenon
+      <3> SUFFICES \E alpha \in Perm(full_indices) : /\ Justified(alpha)'
+                                                     /\ poss.state = [i \in 1..Len(alpha) |-> Val(alpha[i])']
+        BY <3>5, <3>6, <3>15, Zenon
+      <3> QED
+        BY <3>10, <3>11 DEF poss, val
     <2>10. QED
       BY <2>1, <2>2, <2>3, <2>4, <2>5, <2>6, <2>7, <2>8, <2>9 DEF Inv
   <1> QED
@@ -4046,5 +3943,6 @@ THEOREM Spec => []Inv
 
 =============================================================================
 \* Modification History
+\* Last modified Mon Jul 08 18:22:20 UTC 2024 by uyavuz
 \* Last modified Fri Feb 02 19:17:03 EST 2024 by uguryavuz
 \* Created Wed Jan 10 07:15:14 EST 2024 by uguryavuz
